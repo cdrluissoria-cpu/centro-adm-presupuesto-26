@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presupuesto 2026 — Centro Administrativo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F3EE;
+  --surface: #FDFCF9;
+  --surface2: #F0EDE6;
+  --border: #DDD9CF;
+  --border2: #C8C3B5;
+  --text: #1A1815;
+  --text2: #6B6558;
+  --text3: #A09B8E;
+  --accent: #2D5A3D;
+  --accent-lt: #E8F0EB;
+  --danger: #8B2E2E;
+  --danger-lt: #F5E8E8;
+  --warn: #7A5C1A;
+  --warn-lt: #F7F0E0;
+  --info: #1A3D5A;
+  --info-lt: #E4EDF5;
+  --radius: 6px;
+  --radius-lg: 10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* HEADER */
+.header {
+  background: var(--text);
+  color: var(--bg);
+  padding: 18px 28px;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+.header span { font-size: 11px; color: #9B9589; letter-spacing: .06em; }
+.header-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #9B9589;
+  flex-wrap: wrap;
+}
+
+/* LAYOUT */
+.shell { display: flex; min-height: calc(100vh - 57px); }
+
+/* SIDEBAR */
+.nav {
+  width: 210px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 16px 0;
+  position: sticky;
+  top: 57px;
+  height: calc(100vh - 57px);
+  overflow-y: auto;
+}
+.nav-section { padding: 0 12px; margin-bottom: 20px; }
+.nav-label {
+  font-size: 10px;
+  letter-spacing: .1em;
+  color: var(--text3);
+  text-transform: uppercase;
+  padding: 0 4px;
+  margin-bottom: 4px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--text2);
+  transition: all .12s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--text); color: var(--bg); }
+.nav-item .icon { width: 16px; text-align: center; font-size: 13px; flex-shrink: 0; }
+.nav-divider { height: 1px; background: var(--border); margin: 8px 12px; }
+
+/* MAIN */
+.main { flex: 1; padding: 24px 28px; overflow-x: hidden; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* PAGE TITLE */
+.page-title {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.page-sub { font-size: 12px; color: var(--text3); margin-bottom: 20px; line-height: 1.6; }
+
+/* METRIC CARDS */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.metric {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+}
+.metric .mlabel { font-size: 11px; color: var(--text3); letter-spacing: .03em; margin-bottom: 6px; }
+.metric .mval { font-size: 18px; font-weight: 500; font-family: 'Fraunces', serif; }
+.metric .mval.pos { color: var(--accent); }
+.metric .mval.neg { color: var(--danger); }
+
+/* SECTION */
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.section-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  font-size: 11px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text2);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-body { padding: 16px; }
+
+/* FORM GRID */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 11px; color: var(--text3); letter-spacing: .02em; }
+.field input, .field select {
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  transition: border-color .12s;
+}
+.field input:focus, .field select:focus {
+  outline: none; border-color: var(--border2); background: var(--surface);
+}
+.field input[readonly] { color: var(--text3); background: var(--surface2); }
+
+/* TABLES */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 10.5px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  font-weight: 500;
+}
+thead th.r { text-align: right; }
+tbody td {
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+tbody td.r { text-align: right; }
+tbody td.muted { color: var(--text3); font-size: 12px; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+tbody td input {
+  border: none;
+  background: transparent;
+  font-family: 'DM Mono', monospace;
+  font-size: 12.5px;
+  color: var(--text);
+  text-align: right;
+  width: 100%;
+  padding: 1px 2px;
+}
+tbody td input:focus {
+  outline: 1px solid var(--border2);
+  border-radius: 3px;
+  background: var(--surface);
+}
+tr.row-sub td { background: var(--surface2); font-weight: 500; }
+tr.row-total td { background: var(--text); color: var(--bg); font-weight: 500; }
+tr.row-group td {
+  background: var(--accent-lt);
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: 5px 12px;
+}
+
+/* TOTAL BAR */
+.total-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  font-size: 12.5px;
+}
+.total-bar strong { font-weight: 500; }
+
+/* BUTTONS */
+.btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text2);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .12s;
+}
+.btn:hover { background: var(--surface2); }
+.actions { display: flex; gap: 8px; padding: 12px 0 0; flex-wrap: wrap; }
+
+/* ACCORDION */
+tr.acc-group {
+  cursor: pointer;
+  background: var(--surface2);
+}
+tr.acc-group td {
+  padding: 9px 14px !important;
+  font-size: 11px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text2);
+  font-weight: 500;
+}
+tr.acc-group td .toggle-icon {
+  display: inline-block;
+  width: 14px;
+  transition: transform .15s;
+  font-style: normal;
+  font-size: 10px;
+  margin-right: 6px;
+}
+tr.acc-group.open td .toggle-icon { transform: rotate(90deg); }
+tr.acc-item { transition: opacity .1s; }
+tr.acc-item.hidden { display: none; }
+tr.acc-item td { padding-left: 28px !important; }
+tr.acc-subtotal td {
+  background: var(--surface2);
+  font-weight: 500;
+  font-size: 12.5px;
+  border-top: 1px solid var(--border2);
+}
+
+/* ESTADO RESULTADO */
+.er-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.er-table td { padding: 9px 16px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
+.er-table .er-group { background: var(--surface2); font-weight: 500; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text2); padding: 7px 16px; }
+.er-table .er-label { color: var(--text2); font-size: 12.5px; }
+.er-table .er-val { text-align: right; font-weight: 500; white-space: nowrap; }
+.er-table .er-pos { color: var(--accent); }
+.er-table .er-neg { color: var(--danger); }
+.er-table .er-sub td { background: var(--info-lt); font-weight: 500; }
+.er-table .er-total td { background: var(--text); color: var(--bg); font-weight: 500; font-size: 14px; }
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  font-size: 10.5px;
+  color: var(--text3);
+  padding: 28px 0 8px;
+  letter-spacing: .04em;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;flex-direction:column;gap:2px">
+    <div style="font-size:10px;color:#666;letter-spacing:.08em;text-transform:uppercase">Sistema de Gestión Presupuestaria · Congregación Hnas. Dominicas</div>
+    <h1>Centro Administrativo — Tucumán</h1>
+  </div>
+  <span>PRESUPUESTO 2026 · PERÍODO MAR 2026 – FEB 2027</span>
+  <div class="header-right">
+    <button class="btn" style="padding:5px 12px;font-size:11px;color:#4A9E6A;border-color:#4A9E6A" onclick="guardarEstado()">💾 exportar JSON</button>
+    <button class="btn" style="padding:5px 12px;font-size:11px;color:#6A9EC4;border-color:#6A9EC4" onclick="$('cargar-inp').click()">📂 importar JSON</button>
+    <input type="file" id="cargar-inp" accept=".json" style="display:none" onchange="cargarEstado(event)">
+    <button class="btn" style="padding:5px 12px;font-size:11px;color:var(--bg);border-color:#555" onclick="exportarCSV()">↓ CSV</button>
+    <button class="btn" style="padding:5px 12px;font-size:11px;color:var(--bg);border-color:#555" onclick="window.print()">imprimir</button>
+  </div>
+</div>
+
+<div class="shell">
+  <nav class="nav">
+    <div class="nav-section">
+      <div class="nav-label">Inicio</div>
+      <button class="nav-item active" onclick="goTab('inicio',this)">
+        <span class="icon">◈</span> Posición Inicial
+      </button>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">
+      <div class="nav-label">Ingresos</div>
+      <button class="nav-item" onclick="goTab('aportes',this)">
+        <span class="icon">◇</span> Aportes Colegios
+      </button>
+      <button class="nav-item" onclick="goTab('alquileres',this)">
+        <span class="icon">◇</span> Alquileres
+      </button>
+      <button class="nav-item" onclick="goTab('otros-ing',this)">
+        <span class="icon">◇</span> Otros Ingresos
+      </button>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">
+      <div class="nav-label">Egresos</div>
+      <button class="nav-item" onclick="goTab('personal',this)">
+        <span class="icon">◇</span> Personal
+      </button>
+      <button class="nav-item" onclick="goTab('servicios',this)">
+        <span class="icon">◇</span> Servicios de Terceros
+      </button>
+      <button class="nav-item" onclick="goTab('administrativos',this)">
+        <span class="icon">◇</span> Gastos Adm.
+      </button>
+      <button class="nav-item" onclick="goTab('comunidades',this)">
+        <span class="icon">◇</span> Gastos Comunidades
+      </button>
+      <button class="nav-item" onclick="goTab('aportes-egr',this)">
+        <span class="icon">◇</span> Aportes Otorgados
+      </button>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">
+      <div class="nav-label">Capital</div>
+      <button class="nav-item" onclick="goTab('inversiones',this)">
+        <span class="icon">◇</span> Inversiones
+      </button>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-section">
+      <button class="nav-item" onclick="goTab('resumen',this)" style="color:var(--accent);font-weight:500">
+        <span class="icon">■</span> Resumen Final
+      </button>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- ══════════════════ INICIO ══════════════════ -->
+    <div class="panel active" id="tab-inicio">
+      <div class="page-title">Posición Financiera al Inicio</div>
+      <p class="page-sub">Saldos al 01/03/2026. Valores de referencia tomados del cierre del Ejercicio 2025 del Centro Administrativo.</p>
+
+      <div class="metrics" id="met-inicio"></div>
+
+      <div class="section">
+        <div class="section-head">◈ Activo Corriente</div>
+        <div class="section-body">
+          <div class="form-grid" id="ac-grid"></div>
+        </div>
+        <div class="total-bar"><span>Total Activo Corriente</span><strong id="tot-ac">—</strong></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">◈ Pasivo Corriente</div>
+        <div class="section-body">
+          <div class="form-grid" id="pc-grid"></div>
+        </div>
+        <div class="total-bar"><span>Total Pasivo Corriente</span><strong id="tot-pc">—</strong></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ APORTES COLEGIOS ══════════════════ -->
+    <div class="panel" id="tab-aportes">
+      <div class="page-title">Aportes de Colegios y Comunidades</div>
+      <p class="page-sub">Aportes recibidos de cada unidad de la Congregación. Referencia: Ejercicio 2025. Indicar el monto mensual promedio estimado y la cantidad de meses.</p>
+
+      <div class="metrics" id="met-aportes"></div>
+
+      <div class="section">
+        <div class="section-head">◈ 412 · Aportes por Institución <span id="ap-total-head" style="margin-left:auto;font-weight:500;font-size:12px"></span></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód.</th>
+                <th>Institución</th>
+                <th class="r">Referencia 2025</th>
+                <th class="r">% Inc.</th>
+                <th class="r">Presupuesto 2026</th>
+                <th class="r">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="aportes-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar">
+          <span>Total Aportes 2026</span>
+          <strong id="aportes-total">—</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ ALQUILERES ══════════════════ -->
+    <div class="panel" id="tab-alquileres">
+      <div class="page-title">Ingresos por Alquileres</div>
+      <p class="page-sub">Alquileres de locales comerciales y otros espacios. Referencia: Ejercicio 2025.</p>
+
+      <div class="metrics" id="met-alquileres"></div>
+
+      <div class="section">
+        <div class="section-head">◈ 414 · Alquileres y Concesiones</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód.</th>
+                <th>Descripción</th>
+                <th class="r">Referencia 2025</th>
+                <th class="r">% Inc.</th>
+                <th class="r">Presupuesto 2026</th>
+                <th class="r">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="alquileres-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar">
+          <span>Total Alquileres 2026</span>
+          <strong id="alquileres-total">—</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ OTROS INGRESOS ══════════════════ -->
+    <div class="panel" id="tab-otros-ing">
+      <div class="page-title">Otros Ingresos</div>
+      <p class="page-sub">Ingresos financieros, reintegros, extraordinarios y otros recursos del Centro Administrativo.</p>
+
+      <div class="metrics" id="met-otros-ing"></div>
+
+      <div class="section">
+        <div class="section-head">◈ 413 · Recursos Ordinarios Otros</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód.</th><th>Descripción</th>
+                <th class="r">Referencia 2025</th><th class="r">% Inc.</th>
+                <th class="r">Presupuesto 2026</th><th class="r">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="rec-ord-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar"><span>Subtotal 413</span><strong id="rec-ord-total">—</strong></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">◈ 415 · Ingresos Financieros</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód.</th><th>Descripción</th>
+                <th class="r">Referencia 2025</th><th class="r">% Inc.</th>
+                <th class="r">Presupuesto 2026</th><th class="r">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="fin-ing-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar"><span>Subtotal 415</span><strong id="fin-ing-total">—</strong></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">◈ 421 · Recursos Extraordinarios</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód.</th><th>Descripción</th>
+                <th class="r">Referencia 2025</th><th class="r">% Inc.</th>
+                <th class="r">Presupuesto 2026</th><th class="r">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="extr-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar"><span>Subtotal 421</span><strong id="extr-total">—</strong></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ GASTOS EN PERSONAL ══════════════════ -->
+    <div class="panel" id="tab-personal">
+      <div class="page-title">Gastos en Personal</div>
+      <p class="page-sub">511 · Sueldos, cargas sociales, y otros gastos relacionados al personal del Centro Administrativo.</p>
+
+      <div class="metrics" id="met-personal"></div>
+
+      <div class="section">
+        <div class="section-head">◈ 511 · Detalle de Gastos en Personal</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód.</th><th>Descripción</th>
+                <th class="r">Referencia 2025</th><th class="r">% Inc.</th>
+                <th class="r">Presupuesto 2026</th><th class="r">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="personal-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar"><span>Total Personal 2026</span><strong id="personal-total">—</strong></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ SERVICIOS DE TERCEROS ══════════════════ -->
+    <div class="panel" id="tab-servicios">
+      <div class="page-title">Gastos — Servicios de Terceros</div>
+      <p class="page-sub">512 · Honorarios, seguros, servicios, reparaciones y mantenimiento.</p>
+
+      <div class="metrics" id="met-servicios"></div>
+
+      <div class="section">
+        <div class="section-head">◈ 512 · Detalle</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód.</th><th>Descripción</th>
+                <th class="r">Referencia 2025</th><th class="r">% Inc.</th>
+                <th class="r">Presupuesto 2026</th><th class="r">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="servicios-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar"><span>Total Servicios Terceros 2026</span><strong id="servicios-total">—</strong></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ GASTOS ADMINISTRATIVOS ══════════════════ -->
+    <div class="panel" id="tab-administrativos">
+      <div class="page-title">Gastos Administrativos</div>
+      <p class="page-sub">513 · Librería, informática, viáticos, movilidad y demás gastos de administración.</p>
+
+      <div class="metrics" id="met-administrativos"></div>
+
+      <div class="section">
+        <div class="section-head">◈ 513 · Detalle</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód.</th><th>Descripción</th>
+                <th class="r">Referencia 2025</th><th class="r">% Inc.</th>
+                <th class="r">Presupuesto 2026</th><th class="r">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="administrativos-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar"><span>Total Adm. 2026</span><strong id="administrativos-total">—</strong></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ GASTOS COMUNIDADES ══════════════════ -->
+    <div class="panel" id="tab-comunidades">
+      <div class="page-title">Gastos de Comunidades y Otros</div>
+      <p class="page-sub">515 · Gastos de comunidades, 516 · Otros gastos (bazar, culto, juicios, siniestros), 519 · Egresos financieros.</p>
+
+      <div class="metrics" id="met-comunidades"></div>
+
+      <div class="section">
+        <div class="section-head">◈ 515 · Gastos de Comunidades</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód.</th><th>Descripción</th>
+                <th class="r">Referencia 2025</th><th class="r">% Inc.</th>
+                <th class="r">Presupuesto 2026</th><th class="r">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="com-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar"><span>Subtotal 515</span><strong id="com-total">—</strong></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">◈ 516 · Otros Gastos</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód.</th><th>Descripción</th>
+                <th class="r">Referencia 2025</th><th class="r">% Inc.</th>
+                <th class="r">Presupuesto 2026</th><th class="r">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="otros-egr-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar"><span>Subtotal 516</span><strong id="otros-egr-total">—</strong></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">◈ 519 · Egresos Financieros</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód.</th><th>Descripción</th>
+                <th class="r">Referencia 2025</th><th class="r">% Inc.</th>
+                <th class="r">Presupuesto 2026</th><th class="r">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="egr-fin-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar"><span>Subtotal 519</span><strong id="egr-fin-total">—</strong></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ APORTES OTORGADOS ══════════════════ -->
+    <div class="panel" id="tab-aportes-egr">
+      <div class="page-title">Aportes Otorgados</div>
+      <p class="page-sub">518 · Aportes otorgados a colegios, 519 · Aportes a comunidades, situaciones especiales y fondos solidarios.</p>
+
+      <div class="metrics" id="met-aportes-egr"></div>
+
+      <div class="section">
+        <div class="section-head">◈ 518 · Aportes a Colegios</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód.</th><th>Institución</th>
+                <th class="r">Referencia 2025</th><th class="r">% Inc.</th>
+                <th class="r">Presupuesto 2026</th><th class="r">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="ap-col-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar"><span>Subtotal Aportes Colegios</span><strong id="ap-col-total">—</strong></div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">◈ 519 · Aportes a Comunidades y Situaciones Especiales</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cód.</th><th>Descripción</th>
+                <th class="r">Referencia 2025</th><th class="r">% Inc.</th>
+                <th class="r">Presupuesto 2026</th><th class="r">Variación</th>
+              </tr>
+            </thead>
+            <tbody id="ap-com-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar"><span>Subtotal Aportes Comunidades</span><strong id="ap-com-total">—</strong></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ INVERSIONES ══════════════════ -->
+    <div class="panel" id="tab-inversiones">
+      <div class="page-title">Inversiones y Bienes de Uso</div>
+      <p class="page-sub">Compras de activos fijos, obras y mejoras edilicias del período 2026.</p>
+
+      <div class="section">
+        <div class="section-head">◈ Detalle de Inversiones</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Descripción</th><th>Categoría</th>
+                <th class="r">Cant.</th><th class="r">P. Unitario</th><th class="r">Total</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="inv-body"></tbody>
+          </table>
+        </div>
+        <div class="total-bar"><span>Total Inversiones</span><strong id="inv-total">$ 0</strong></div>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="addInv()">+ agregar ítem</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════ RESUMEN ══════════════════ -->
+    <div class="panel" id="tab-resumen">
+      <div class="page-title">Cuadro Resumen — Posición Financiera 2026</div>
+      <p class="page-sub">Síntesis del período. Se actualiza automáticamente con todos los datos ingresados.</p>
+
+      <div class="metrics" id="met-resumen"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="section">
+          <div class="section-head">◈ Ingresos — Resumen</div>
+          <div id="res-ing-lines"></div>
+        </div>
+        <div class="section">
+          <div class="section-head">◈ Egresos — Resumen</div>
+          <div id="res-egr-lines"></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">◈ Posición Financiera del Ejercicio</div>
+        <div id="resumen-lines"></div>
+      </div>
+
+      <div class="section" style="margin-top:14px">
+        <div class="section-head">◈ Notas al Presupuesto</div>
+        <div class="section-body">
+          <div class="form-grid" style="grid-template-columns:1fr">
+            <div class="field">
+              <label>Notas adicionales (metodología, supuestos, aclaraciones)</label>
+              <div id="notas" contenteditable="true" style="padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);font-family:'DM Mono',monospace;font-size:12px;color:var(--text);min-height:140px;line-height:1.8;white-space:pre-wrap;outline:none">Presupuesto confeccionado: Marzo 2026
+Período: 01/03/2026 al 28/02/2027
+Sistema: Devengado
+
+INGRESOS
+- Aportes de Colegios y Comunidades: Estimados con incremento según pauta acordada.
+- Alquileres: Actualizados según contratos vigentes y proyección de inflación.
+- Ingresos Financieros: Estimados según rendimiento esperado de inversiones.
+
+EGRESOS
+- Personal: Sueldos informados con incremento estimado según pautas vigentes.
+- Aportes Otorgados: Sujetos a revisión según necesidades de cada institución.
+- Gastos Administrativos: Actualizados según evolución de precios.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        Centro Administrativo · Congregación Hnas. Dominicas · Tucumán · Presupuesto 2026
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const num = id => parseFloat($( id )?.value || 0) || 0;
+const fmt = v => {
+  const n = Math.round(Math.abs(v));
+  const s = '$ ' + n.toLocaleString('es-AR');
+  return v < 0 ? '(' + s + ')' : s;
+};
+const pct = (v, ref) => ref > 0 ? ((v - ref) / ref * 100).toFixed(0) + '%' : '—';
+
+// ─── NAV ───
+function goTab(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  $('tab-' + id)?.classList.add('active');
+  el.classList.add('active');
+  updateAll();
+}
+
+// ─── INICIO ───
+const acFields = [
+  {id:'ac-caja',    label:'Caja',                              val:14862579},
+  {id:'ac-banco',   label:'Bancos (total pesos)',               val:38085192},
+  {id:'ac-me-caja', label:'Moneda Extranjera (efectivo)',        val:20104500},
+  {id:'ac-me-banco',label:'Bancos Moneda Extranjera',           val:-4249960},
+  {id:'ac-cseg',    label:'Cajas de Seguridad',                 val:55850743},
+  {id:'ac-inv',     label:'Inversiones a Corto Plazo (FCI)',     val:528988718},
+  {id:'ac-alq',     label:'Deudores por Alquileres',            val:18631002},
+  {id:'ac-otras',   label:'Otras Cuentas a Cobrar',             val:126017754},
+];
+const pcFields = [
+  {id:'pc-com',    label:'Deudas Comerciales',              val:461104},
+  {id:'pc-soc',    label:'Deudas Sociales y Previsionales', val:8934751},
+  {id:'pc-fis',    label:'Deudas Fiscales',                 val:90759},
+  {id:'pc-otras',  label:'Otras Deudas',                    val:3114582},
+  {id:'pc-rel',    label:'Deudas con Partes Relacionadas',  val:5616183},
+  {id:'pc-fondos', label:'Fondos con Destino Específico',   val:10117084},
+  {id:'pc-ant',    label:'Anticipos Cobrados',              val:700000},
+];
+
+function fmtField(id, label, val) {
+  return `<div class="field">
+    <label>${label}</label>
+    <div style="position:relative">
+      <span id="${id}-disp" style="display:block;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);cursor:text;font-size:13px;min-height:34px;line-height:1.6"
+        onclick="editFmtField('${id}')">${fmt(val)}</span>
+      <input type="number" id="${id}" value="${val}" style="display:none;position:absolute;top:0;left:0;width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface);font-family:'DM Mono',monospace;font-size:13px;color:var(--text)"
+        onblur="cerrarFmtField('${id}')" oninput="calcInicio()">
+    </div>
+  </div>`;
+}
+function editFmtField(id) {
+  const d=$(id+'-disp'), i=$(id);
+  if(!d||!i) return;
+  d.style.display='none'; i.style.display='block'; i.focus(); i.select();
+}
+function cerrarFmtField(id) {
+  const d=$(id+'-disp'), i=$(id);
+  if(!d||!i) return;
+  d.textContent = fmt(parseFloat(i.value)||0);
+  i.style.display='none'; d.style.display='block';
+  calcInicio();
+}
+
+function initInicio() {
+  const acGrid=$('ac-grid');
+  if(acGrid) acGrid.innerHTML = acFields.map(f => fmtField(f.id, f.label, f.val)).join('');
+  const pcGrid=$('pc-grid');
+  if(pcGrid) pcGrid.innerHTML = pcFields.map(f => fmtField(f.id, f.label, f.val)).join('');
+}
+
+function calcInicio() {
+  const ac = acFields.reduce((s,f) => s + (parseFloat($(f.id)?.value||0)||0), 0);
+  const pc = pcFields.reduce((s,f) => s + (parseFloat($(f.id)?.value||0)||0), 0);
+  const liq = ac - pc;
+  if($('tot-ac')) $('tot-ac').textContent = fmt(ac);
+  if($('tot-pc')) $('tot-pc').textContent = fmt(pc);
+  if($('met-inicio')) $('met-inicio').innerHTML = `
+    <div class="metric"><div class="mlabel">Activo Corriente</div><div class="mval">${fmt(ac)}</div></div>
+    <div class="metric"><div class="mlabel">Pasivo Corriente</div><div class="mval neg">${fmt(pc)}</div></div>
+    <div class="metric"><div class="mlabel">Capital de Trabajo Neto</div><div class="mval ${liq>=0?'pos':'neg'}">${fmt(liq)}</div></div>
+  `;
+  return {ac, pc, liq};
+}
+
+// ─── TABLA GENÉRICA (ingresos/egresos) ───
+function makeRow(r) {
+  // r = {id, cod, label, ref}
+  const pres = r.ref;
+  return `<tr id="row-${r.id}">
+    <td class="muted" style="font-size:10.5px">${r.cod}</td>
+    <td>${r.label}</td>
+    <td class="r" style="color:var(--text3);font-size:12px">${fmt(r.ref)}</td>
+    <td class="r" style="width:80px">
+      <div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
+        <input type="number" id="${r.id}-pct" placeholder="—"
+          style="width:55px;text-align:right;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;background:var(--bg);color:var(--warn)"
+          oninput="aplicarPct('${r.id}')">
+        <span style="font-size:10px;color:var(--text3)">%</span>
+      </div>
+    </td>
+    <td class="r">
+      <span id="${r.id}-disp" style="font-size:12.5px;font-weight:500;cursor:text" onclick="editCell('${r.id}')">${fmt(pres)}</span>
+      <input type="number" id="${r.id}" value="${pres}"
+        style="display:none;width:130px;text-align:right;padding:3px 6px;border:1px solid var(--border2);border-radius:4px;font-family:'DM Mono',monospace;font-size:12.5px"
+        onblur="cerrarCell('${r.id}')" oninput="clearPct('${r.id}');updateAll()">
+    </td>
+    <td class="r" id="${r.id}-var" style="font-size:12px;color:var(--text3)">—</td>
+  </tr>`;
+}
+
+function editCell(id) {
+  const d=$(id+'-disp'), i=$(id);
+  if(!d||!i) return;
+  d.style.display='none'; i.style.display='inline-block'; i.focus(); i.select();
+}
+function cerrarCell(id) {
+  const d=$(id+'-disp'), i=$(id);
+  if(!d||!i) return;
+  d.textContent = fmt(parseFloat(i.value)||0);
+  i.style.display='none'; d.style.display='inline-block';
+  updateAll();
+}
+function aplicarPct(id) {
+  const r = allRows().find(x=>x.id===id);
+  if(!r) return;
+  const p = parseFloat($(id+'-pct')?.value||'');
+  if(isNaN(p)) return;
+  const v = Math.round(r.ref * (1 + p/100));
+  const i=$(id); if(i) i.value=v;
+  const d=$(id+'-disp'); if(d) d.textContent=fmt(v);
+  updateAll();
+}
+function clearPct(id) {
+  const p=$(id+'-pct'); if(p) p.value='';
+}
+
+function rowVal(id) { return parseFloat($(id)?.value||0)||0; }
+function rowRef(id) { return allRows().find(x=>x.id===id)?.ref||0; }
+
+// ─── DATOS ───
+const aportesData = [
+  {id:'ap-csc',  cod:'412005', label:'Colegio Santa Catalina',           ref:123593547},
+  {id:'ap-csr',  cod:'412006', label:'Colegio Santa Rosa',               ref:243920114},
+  {id:'ap-cla',  cod:'412007', label:'Colegio La Asunción',              ref:73024907},
+  {id:'ap-crmj', cod:'412008', label:'Col. Ssmo. Rosario (M)',           ref:50654352},
+  {id:'ap-csf',  cod:'412009', label:'Col. Sagrada Familia',             ref:100583628},
+  {id:'ap-crrj', cod:'412010', label:'Col. Ssmo. Rosario (R)',           ref:84930338},
+  {id:'ap-ccm',  cod:'412014', label:'Comunidad Casa Madre',             ref:14471555},
+  {id:'ap-cepg', cod:'412015', label:'Comunidad Elmina Paz Gallo',       ref:28143732},
+  {id:'ap-lasun',cod:'412016', label:'Comunidad La Asunción',            ref:21174478},
+  {id:'ap-cros', cod:'412017', label:'Comunidad Ssmo. Rosario (R)',      ref:12769570},
+];
+
+// ─── ALQUILERES LOCALES: detalle por inquilino ───
+let locItems = [
+  {id:'loc-1', label:'Inquilino 1', val:0},
+];
+let _locSeq = 2;
+
+function addLoc() {
+  locItems.push({id:'loc-'+(_locSeq++), label:'Inquilino '+(_locSeq-1), val:0});
+  renderAlquileres();
+  updateAll();
+}
+function delLoc(id) {
+  locItems = locItems.filter(x=>x.id!==id);
+  renderAlquileres();
+  updateAll();
+}
+function locTotal() {
+  return locItems.reduce((s,it) => s + (parseFloat(document.getElementById(it.id)?.value||0)||0), 0);
+}
+
+function renderAlquileres() {
+  const b=$('alquileres-body');
+  if(!b) return;
+
+  // Fila grupo 414002 expandible
+  const tot414002 = locTotal();
+  const ref414002 = 316634298;
+
+  let html = '';
+  // Fila encabezado expandible
+  html += `<tr id="alq-loc-hdr" style="cursor:pointer;background:var(--surface2)" onclick="toggleLocales()">
+    <td class="muted" style="font-size:10.5px;padding-left:12px!important">414002</td>
+    <td style="padding-left:12px!important">
+      <span id="loc-toggle-icon" style="display:inline-block;width:14px;font-size:10px;transition:transform .15s;margin-right:4px">▶</span>
+      Alquiler Locales Comerciales
+    </td>
+    <td class="r" style="color:var(--text3);font-size:12px">${fmt(ref414002)}</td>
+    <td class="r"></td>
+    <td class="r" style="font-weight:500" id="alq-loc-tot">${fmt(tot414002)}</td>
+    <td class="r" id="alq-loc-var" style="font-size:12px;color:var(--text3)">—</td>
+  </tr>`;
+
+  // Filas detalle (ocultables)
+  locItems.forEach((it, i) => {
+    html += `<tr class="loc-detail-row" style="display:none;background:var(--surface)">
+      <td style="padding-left:12px!important"></td>
+      <td style="padding-left:36px!important">
+        <input value="${it.label}" placeholder="Inquilino / Local"
+          oninput="locItems[${i}].label=this.value"
+          style="width:200px;border:none;border-bottom:1px solid var(--border2);background:transparent;font-family:'DM Mono',monospace;font-size:12.5px;padding:2px 4px">
+      </td>
+      <td></td>
+      <td></td>
+      <td class="r">
+        <input type="number" id="${it.id}" value="${it.val}" placeholder="0"
+          oninput="locItems[${i}].val=parseFloat(this.value)||0;calcAlqLoc();updateAll()"
+          style="width:130px;text-align:right;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12.5px;background:var(--bg)">
+      </td>
+      <td class="r">
+        <button onclick="delLoc('${it.id}')" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:13px" title="Eliminar">✕</button>
+      </td>
+    </tr>`;
+  });
+
+  // Fila botón agregar (dentro del bloque expandible)
+  html += `<tr class="loc-detail-row" style="display:none;background:var(--surface)">
+    <td colspan="6" style="padding:4px 16px 4px 48px">
+      <button onclick="addLoc()" style="font-size:11px;color:var(--accent);background:none;border:1px dashed var(--accent);border-radius:4px;padding:3px 10px;cursor:pointer">+ agregar inquilino</button>
+    </td>
+  </tr>`;
+
+  // Resto de alquileres
+  const resto = [
+    {id:'alq-alb',  cod:'414008', label:'Albergues',          ref:6327269},
+    {id:'alq-mus',  cod:'414009', label:'Museo Elmina',        ref:150000},
+    {id:'alq-vbu',  cod:'414011', label:'Venta Bienes de Uso', ref:450805400},
+  ];
+  resto.forEach(r => { html += makeRow(r); });
+
+  b.innerHTML = html;
+  calcAlqLoc();
+}
+
+let _locOpen = false;
+function toggleLocales() {
+  _locOpen = !_locOpen;
+  document.querySelectorAll('.loc-detail-row').forEach(r => r.style.display = _locOpen ? '' : 'none');
+  const icon=$('loc-toggle-icon');
+  if(icon) icon.style.transform = _locOpen ? 'rotate(90deg)' : '';
+}
+
+function calcAlqLoc() {
+  const tot = locTotal();
+  const ref = 316634298;
+  const el=$('alq-loc-tot'); if(el) el.textContent=fmt(tot);
+  const varEl=$('alq-loc-var');
+  if(varEl) {
+    const diff = tot - ref;
+    const p = ref!==0 ? ((diff/ref)*100).toFixed(0) : '—';
+    varEl.textContent = (diff!==0?fmt(diff):'—') + (p!=='—'?' ('+p+'%)':'');
+    varEl.style.color = diff>0?'var(--danger)':diff<0?'var(--accent)':'var(--text3)';
+  }
+}
+
+// alquileresData solo para calcSection (sin alq-loc, ese se suma aparte)
+const alquileresDataResto = [
+  {id:'alq-alb',  cod:'414008', label:'Albergues',          ref:6327269},
+  {id:'alq-mus',  cod:'414009', label:'Museo Elmina',        ref:150000},
+  {id:'alq-vbu',  cod:'414011', label:'Venta Bienes de Uso', ref:450805400},
+];
+const alquileresData = alquileresDataResto; // alias para allRows()
+
+const recOrdData = [
+  {id:'ro-reint', cod:'413001', label:'Reintegro Gastos Adm. y Comisiones', ref:13635006},
+  {id:'ro-jub',   cod:'413012', label:'Jubilaciones y Pensiones',            ref:4380297},
+  {id:'ro-sue',   cod:'413013', label:'Sueldos Ingreso',                     ref:21398984},
+];
+
+const finIngData = [
+  {id:'fi-int',   cod:'415001', label:'Intereses y Rendimiento de Inversiones', ref:147497871},
+  {id:'fi-dif',   cod:'415003', label:'Diferencias de Cotizaciones',             ref:8039368},
+  {id:'fi-desc',  cod:'415004', label:'Descuentos Obtenidos',                    ref:65948},
+];
+
+const extrData = [
+  {id:'ex-sob',   cod:'421001', label:'Sobrante de Caja',                ref:455452},
+  {id:'ex-don',   cod:'421002', label:'Donaciones',                       ref:57508412},
+];
+
+const personalData = [
+  {id:'pe-sue',   cod:'511001', label:'Sueldos',                          ref:194783181},
+  {id:'pe-cc',    cod:'511002', label:'Cargas Sociales',                  ref:45938654},
+  {id:'pe-hab',   cod:'511003', label:'Haberes Sin Aportes',              ref:3628591},
+  {id:'pe-indem', cod:'511005', label:'Indemnización',                    ref:1198901},
+  {id:'pe-cap',   cod:'511006', label:'Capacitación',                     ref:144815},
+  {id:'pe-uni',   cod:'511007', label:'Uniformes / Ropa de Trabajo',      ref:1012000},
+  {id:'pe-otros', cod:'511008', label:'Otros Gastos en Personal',         ref:20506798},
+  {id:'pe-hnas',  cod:'511009', label:'Comunidad Hermanas',               ref:56988884},
+];
+
+const serviciosData = [
+  {id:'sv-hon',   cod:'512001', label:'Honorarios',                       ref:54298305},
+  {id:'sv-seg',   cod:'512002', label:'Seguros',                          ref:3084861},
+  {id:'sv-lag',   cod:'512003', label:'Luz, Agua, Gas',                   ref:15841500},
+  {id:'sv-tel',   cod:'512004', label:'Teléfono y Comunicaciones',        ref:4125667},
+  {id:'sv-red',   cod:'512005', label:'Repar. y Conserv. Edificios',      ref:52013796},
+  {id:'sv-rmb',   cod:'512006', label:'Repar. y Conserv. Muebles',        ref:100400},
+  {id:'sv-rmq',   cod:'512007', label:'Repar. y Conserv. Maquinarias',    ref:1041852},
+  {id:'sv-rau',   cod:'512008', label:'Repar. y Conserv. Automotores',    ref:4324735},
+  {id:'sv-lim',   cod:'512009', label:'Servicios y Art. de Limpieza',     ref:9147880},
+  {id:'sv-imp',   cod:'512010', label:'Impuestos y Tasas',                ref:347024},
+  {id:'sv-com',   cod:'512011', label:'Comisiones',                       ref:2022716},
+  {id:'sv-sec',   cod:'512012', label:'Seguridad y Emergencias Médicas',  ref:5962832},
+  {id:'sv-sep',   cod:'512013', label:'Gastos Sepelio y Cementerio',      ref:2318145},
+];
+
+const admData = [
+  {id:'ad-lib',   cod:'513001', label:'Librería e Impresiones',           ref:9301809},
+  {id:'ad-it',    cod:'513002', label:'Informática',                      ref:26652701},
+  {id:'ad-pre',   cod:'513003', label:'Prensa y Difusión',               ref:3027953},
+  {id:'ad-sus',   cod:'513004', label:'Suscripciones',                    ref:33788692},
+  {id:'ad-via',   cod:'513005', label:'Viáticos, Agasajos y Regalos',    ref:109930915},
+  {id:'ad-mov',   cod:'513007', label:'Movilidad y Combustible',          ref:62745981},
+  {id:'ad-ban',   cod:'513009', label:'Gastos Bancarios',                 ref:5248258},
+  {id:'ad-dif',   cod:'513011', label:'Diferencias de Caja',              ref:11383},
+  {id:'ad-don',   cod:'513014', label:'Donación Egreso',                  ref:200000},
+  {id:'ad-per',   cod:'513015', label:'Percepción ARCA RG 3378/9',        ref:6685},
+];
+
+const comData = [
+  {id:'co-est',   cod:'515003', label:'Estudio y Actualización',          ref:3811594},
+  {id:'co-med',   cod:'515005', label:'Médico y Farmacia',               ref:1025000},
+];
+
+const otrosEgrData = [
+  {id:'oe-baz',   cod:'516003', label:'Bazar y Utensillos',               ref:783989},
+  {id:'oe-cul',   cod:'516004', label:'Culto',                            ref:46800},
+  {id:'oe-jui',   cod:'516006', label:'Juicios Perdidos',                 ref:65667753},
+  {id:'oe-sin',   cod:'516008', label:'Pérdida por Siniestro',            ref:4362862},
+];
+
+const egrFinData = [
+  {id:'ef-dif',   cod:'519302', label:'Diferencias de Cotizaciones',      ref:934439},
+  {id:'ef-desc',  cod:'519303', label:'Descuentos Otorgados',             ref:61232},
+  {id:'ef-int',   cod:'519304', label:'Intereses Moratorios y Multas',    ref:262814},
+];
+
+const apColData = [
+  {id:'acl-csr',  cod:'518002', label:'A Colegio Santa Rosa',             ref:306198791},
+  {id:'acl-cla',  cod:'518003', label:'A Colegio La Asunción',            ref:29000000},
+  {id:'acl-crr',  cod:'518006', label:'A Col. Ssmo. Rosario (R)',         ref:110000000},
+  {id:'acl-cst',  cod:'518008', label:'A Colegio Santa Teresita',         ref:1000000},
+];
+
+const apComData = [
+  {id:'aco-ccm',  cod:'519001', label:'A Comunidad Casa Madre',           ref:91531490},
+  {id:'aco-csf',  cod:'519005', label:'A Comunidad Santa Fe',             ref:11681577},
+  {id:'aco-rita', cod:'519101', label:'A Hna. Rita Bieler',               ref:15652408},
+  {id:'aco-ang',  cod:'519102', label:'A Hna. M. Ángela Pereyra',         ref:7884068},
+  {id:'aco-ines', cod:'519104', label:'Aporte Inés Sedan (Chichi)',        ref:4492000},
+  {id:'aco-flap', cod:'519201', label:'Fondo Solidario La Pampa',         ref:1731250},
+  {id:'aco-fros', cod:'519202', label:'Fondo Solidario Rosario',          ref:3165000},
+  {id:'aco-fcha', cod:'519203', label:'Fondo Solidario Chasquivil',       ref:1545592},
+  {id:'aco-flas', cod:'519204', label:'Fondo Solidario La Asunción',      ref:1300000},
+  {id:'aco-fcm',  cod:'519206', label:'Fondo Solidario Casa Madre',       ref:4673250},
+];
+
+function allRows() {
+  return [...aportesData,...alquileresDataResto,...recOrdData,...finIngData,...extrData,
+          ...personalData,...serviciosData,...admData,...comData,...otrosEgrData,
+          ...egrFinData,...apColData,...apComData];
+}
+
+// ─── RENDER TABLAS ───
+function renderTable(bodyId, data) {
+  const el=$(bodyId);
+  if(!el) return;
+  el.innerHTML = data.map(r => makeRow(r)).join('');
+  // subtotales group row
+}
+
+function calcSection(data) {
+  return data.reduce((s,r) => s + rowVal(r.id), 0);
+}
+
+function updateVars(data) {
+  data.forEach(r => {
+    const v = rowVal(r.id);
+    const varEl=$(r.id+'-var');
+    if(varEl) {
+      const diff = v - r.ref;
+      const p = r.ref !== 0 ? ((diff/r.ref)*100).toFixed(0) : '—';
+      varEl.textContent = (diff!==0?fmt(diff):'—') + (p!=='—'?' ('+p+'%)':'');
+      varEl.style.color = diff > 0 ? 'var(--danger)' : diff < 0 ? 'var(--accent)' : 'var(--text3)';
+    }
+  });
+}
+
+// ─── INVERSIONES ───
+let invItems = [];
+let _invSeq = 1;
+function addInv() {
+  const id = 'inv-'+(_invSeq++);
+  invItems.push({id, desc:'', cat:'Bienes de Uso', cant:1, pu:0});
+  renderInv();
+}
+function delInv(id) {
+  invItems = invItems.filter(x=>x.id!==id);
+  renderInv();
+  updateAll();
+}
+function renderInv() {
+  const b=$('inv-body');
+  if(!b) return;
+  b.innerHTML = invItems.map(it => `
+    <tr id="tr-${it.id}">
+      <td><input value="${it.desc}" placeholder="Descripción" oninput="invItems.find(x=>x.id==='${it.id}').desc=this.value"
+        style="width:100%;border:none;background:transparent;font-family:'DM Mono',monospace;font-size:12.5px"></td>
+      <td><select onchange="invItems.find(x=>x.id==='${it.id}').cat=this.value;updateAll()"
+        style="border:1px solid var(--border);border-radius:4px;background:var(--bg);font-family:'DM Mono',monospace;font-size:12px;padding:3px 6px">
+        <option ${it.cat==='Bienes de Uso'?'selected':''}>Bienes de Uso</option>
+        <option ${it.cat==='Obras y Mejoras'?'selected':''}>Obras y Mejoras</option>
+        <option ${it.cat==='Informática'?'selected':''}>Informática</option>
+        <option ${it.cat==='Rodados'?'selected':''}>Rodados</option>
+        <option ${it.cat==='Instalaciones'?'selected':''}>Instalaciones</option>
+      </select></td>
+      <td class="r" style="white-space:nowrap">
+        <span id="${it.id}-cant-disp" style="cursor:text;font-size:12.5px;padding:2px 6px;display:inline-block;min-width:40px;text-align:right"
+          onclick="editInvField('${it.id}','cant')">${it.cant}</span>
+        <input type="number" id="${it.id}-cant" value="${it.cant}" min="1"
+          style="display:none;width:55px;text-align:right;padding:3px 6px;border:1px solid var(--border2);border-radius:4px;font-family:'DM Mono',monospace;font-size:12.5px"
+          onblur="cerrarInvField('${it.id}','cant')" oninput="invItems.find(x=>x.id==='${it.id}').cant=parseFloat(this.value)||1;calcInv()">
+      </td>
+      <td class="r" style="white-space:nowrap">
+        <span id="${it.id}-pu-disp" style="cursor:text;font-size:12.5px;font-weight:500;padding:2px 6px;display:inline-block;min-width:100px;text-align:right"
+          onclick="editInvField('${it.id}','pu')">${it.pu===0?'$ 0':fmt(it.pu)}</span>
+        <input type="number" id="${it.id}-pu" value="${it.pu}"
+          style="display:none;width:140px;text-align:right;padding:3px 6px;border:1px solid var(--border2);border-radius:4px;font-family:'DM Mono',monospace;font-size:12.5px"
+          onblur="cerrarInvField('${it.id}','pu')" oninput="invItems.find(x=>x.id==='${it.id}').pu=parseFloat(this.value)||0;calcInv()">
+      </td>
+      <td class="r" id="${it.id}-tot" style="font-weight:500">${fmt(it.cant*it.pu)}</td>
+      <td><button onclick="delInv('${it.id}')" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:13px">✕</button></td>
+    </tr>`).join('');
+}
+
+function editInvField(id, field) {
+  const disp=$(id+'-'+field+'-disp'), inp=$(id+'-'+field);
+  if(!disp||!inp) return;
+  disp.style.display='none'; inp.style.display='inline-block'; inp.focus(); inp.select();
+}
+function cerrarInvField(id, field) {
+  const disp=$(id+'-'+field+'-disp'), inp=$(id+'-'+field);
+  if(!disp||!inp) return;
+  const it = invItems.find(x=>x.id===id);
+  if(field==='cant') { it.cant=parseFloat(inp.value)||1; disp.textContent=it.cant; }
+  else               { it.pu=parseFloat(inp.value)||0;   disp.textContent=fmt(it.pu); }
+  inp.style.display='none'; disp.style.display='inline-block';
+  calcInv(); updateAll();
+}
+function calcInv() {
+  invItems.forEach(it => {
+    const r=$(`${it.id}-tot`); if(r) r.textContent=fmt(it.cant*it.pu);
+  });
+  const total = invItems.reduce((s,it)=>s+it.cant*it.pu,0);
+  const el=$('inv-total'); if(el) el.textContent=fmt(total);
+  return total;
+}
+
+// ─── RESUMEN ───
+function updateResumen() {
+  const totAp  = calcSection(aportesData);
+  const totAlq = locTotal() + calcSection(alquileresDataResto);
+  const totRO  = calcSection(recOrdData);
+  const totFI  = calcSection(finIngData);
+  const totEx  = calcSection(extrData);
+  const totIng = totAp + totAlq + totRO + totFI + totEx;
+
+  const totPer  = calcSection(personalData);
+  const totSrv  = calcSection(serviciosData);
+  const totAdm  = calcSection(admData);
+  const totCom  = calcSection(comData);
+  const totOE   = calcSection(otrosEgrData);
+  const totEF   = calcSection(egrFinData);
+  const totApC  = calcSection(apColData);
+  const totApCo = calcSection(apComData);
+  const totEgr  = totPer + totSrv + totAdm + totCom + totOE + totEF + totApC + totApCo;
+
+  const resultado = totIng - totEgr;
+  const inv = calcInv();
+
+  // Posición inicial
+  const ini = calcInicio();
+  const posInicio = ini.liq;
+  const posFinal = posInicio + resultado - inv;
+
+  // Panel izquierdo: ingresos
+  const riEl=$('res-ing-lines');
+  if(riEl) riEl.innerHTML=`<table class="er-table">
+    <tr><td class="er-label">Aportes Colegios y Comunidades</td><td class="er-val er-pos">${fmt(totAp)}</td></tr>
+    <tr><td class="er-label">Alquileres y Concesiones</td><td class="er-val er-pos">${fmt(totAlq)}</td></tr>
+    <tr><td class="er-label">Recursos Ordinarios Otros</td><td class="er-val er-pos">${fmt(totRO)}</td></tr>
+    <tr><td class="er-label">Ingresos Financieros</td><td class="er-val er-pos">${fmt(totFI)}</td></tr>
+    <tr><td class="er-label">Recursos Extraordinarios</td><td class="er-val er-pos">${fmt(totEx)}</td></tr>
+    <tr class="er-sub"><td><strong>TOTAL INGRESOS</strong></td><td class="er-val er-pos"><strong>${fmt(totIng)}</strong></td></tr>
+  </table>`;
+
+  // Panel derecho: egresos (sin códigos)
+  const reEl=$('res-egr-lines');
+  if(reEl) reEl.innerHTML=`<table class="er-table">
+    <tr><td class="er-label">Personal</td><td class="er-val er-neg">${fmt(totPer)}</td></tr>
+    <tr><td class="er-label">Servicios de Terceros</td><td class="er-val er-neg">${fmt(totSrv)}</td></tr>
+    <tr><td class="er-label">Gastos Administrativos</td><td class="er-val er-neg">${fmt(totAdm)}</td></tr>
+    <tr><td class="er-label">Gastos Comunidades</td><td class="er-val er-neg">${fmt(totCom)}</td></tr>
+    <tr><td class="er-label">Otros Gastos</td><td class="er-val er-neg">${fmt(totOE)}</td></tr>
+    <tr><td class="er-label">Egresos Financieros</td><td class="er-val er-neg">${fmt(totEF)}</td></tr>
+    <tr><td class="er-label">Aportes Otorgados a Colegios</td><td class="er-val er-neg">${fmt(totApC)}</td></tr>
+    <tr><td class="er-label">Aportes Otorgados a Comunidades</td><td class="er-val er-neg">${fmt(totApCo)}</td></tr>
+    <tr class="er-sub"><td><strong>TOTAL EGRESOS</strong></td><td class="er-val er-neg"><strong>${fmt(totEgr)}</strong></td></tr>
+  </table>`;
+
+  // Posición financiera
+  const rl=$('resumen-lines');
+  if(rl) rl.innerHTML=`<table class="er-table" style="font-size:13.5px">
+    <tr style="background:var(--info-lt)">
+      <td style="color:var(--info);font-weight:500;padding:14px 16px;font-size:14px">Posición Financiera al Inicio</td>
+      <td class="er-val" style="color:var(--info);font-weight:500;font-size:16px;padding-right:16px">${fmt(posInicio)}</td>
+    </tr>
+    <tr><td class="er-group" colspan="2" style="padding-top:10px">Resultado del Ejercicio</td></tr>
+    <tr><td class="er-label" style="padding-left:28px">+ Ingresos</td><td class="er-val er-pos">${fmt(totIng)}</td></tr>
+    <tr><td class="er-label" style="padding-left:28px">− Egresos</td><td class="er-val er-neg">(${fmt(totEgr)})</td></tr>
+    <tr style="background:var(--surface2)">
+      <td style="font-weight:500;padding:10px 16px">= Resultado del Ejercicio</td>
+      <td class="er-val ${resultado>=0?'er-pos':'er-neg'}" style="font-weight:500;font-size:14px">${resultado>=0?'':'−'} ${fmt(Math.abs(resultado))}</td>
+    </tr>
+    <tr><td class="er-label" style="padding-left:28px;padding-top:10px">− Inversiones y Bienes de Uso</td><td class="er-val" style="color:var(--info)">(${fmt(inv)})</td></tr>
+    <tr class="er-total">
+      <td style="font-size:15px;letter-spacing:.02em;padding:14px 16px">POSICIÓN FINANCIERA AL FINAL</td>
+      <td class="er-val ${posFinal>=0?'er-pos':'er-neg'}" style="font-size:16px;padding-right:16px">${fmt(posFinal)}</td>
+    </tr>
+  </table>`;
+
+  const mr=$('met-resumen');
+  if(mr) mr.innerHTML=`
+    <div class="metric"><div class="mlabel">Posición Inicial</div><div class="mval" style="color:var(--info)">${fmt(posInicio)}</div></div>
+    <div class="metric"><div class="mlabel">Total Ingresos</div><div class="mval pos">${fmt(totIng)}</div></div>
+    <div class="metric"><div class="mlabel">Total Egresos</div><div class="mval neg">${fmt(totEgr)}</div></div>
+    <div class="metric"><div class="mlabel">Resultado del Ejercicio</div><div class="mval ${resultado>=0?'pos':'neg'}">${fmt(resultado)}</div></div>
+    <div class="metric"><div class="mlabel">Inversiones</div><div class="mval" style="color:var(--info)">${fmt(inv)}</div></div>
+    <div class="metric"><div class="mlabel">Posición Final</div><div class="mval ${posFinal>=0?'pos':'neg'}">${fmt(posFinal)}</div></div>
+  `;
+
+  return {totIng, totEgr, resultado};
+}
+
+// ─── UPDATE SECTION TOTALS ───
+function updateSection(data, totalId, metId, metLabel) {
+  const tot = calcSection(data);
+  const el=$(totalId); if(el) el.textContent = fmt(tot);
+  if(metId && $( metId)) $(metId).innerHTML = `
+    <div class="metric"><div class="mlabel">Referencia 2025</div><div class="mval">${fmt(data.reduce((s,r)=>s+r.ref,0))}</div></div>
+    <div class="metric"><div class="mlabel">Presupuesto 2026</div><div class="mval pos">${fmt(tot)}</div></div>
+    <div class="metric"><div class="mlabel">Variación</div><div class="mval ${tot>data.reduce((s,r)=>s+r.ref,0)?'neg':'pos'}">${fmt(tot-data.reduce((s,r)=>s+r.ref,0))}</div></div>
+  `;
+  updateVars(data);
+  return tot;
+}
+
+// ─── UPDATE ALL ───
+function updateAll() {
+  calcInicio();
+
+  // Ingresos
+  updateSection(aportesData, 'aportes-total', 'met-aportes');
+  // Alquileres: incluye locales (detalle) + resto
+  const _totAlqAll = locTotal() + calcSection(alquileresDataResto);
+  const _refAlqAll = 316634298 + alquileresDataResto.reduce((s,r)=>s+r.ref,0);
+  const _alqEl=$('alquileres-total'); if(_alqEl) _alqEl.textContent=fmt(_totAlqAll);
+  if($('met-alquileres')) $('met-alquileres').innerHTML=`
+    <div class="metric"><div class="mlabel">Referencia 2025</div><div class="mval">${fmt(_refAlqAll)}</div></div>
+    <div class="metric"><div class="mlabel">Presupuesto 2026</div><div class="mval pos">${fmt(_totAlqAll)}</div></div>
+    <div class="metric"><div class="mlabel">Variación</div><div class="mval ${_totAlqAll>_refAlqAll?'neg':'pos'}">${fmt(_totAlqAll-_refAlqAll)}</div></div>
+  `;
+  updateVars(alquileresDataResto);
+  calcAlqLoc();  // solo actualiza la fila 414002, sin recursión
+  updateSection(recOrdData, 'rec-ord-total', null);
+  updateSection(finIngData, 'fin-ing-total', null);
+  updateSection(extrData, 'extr-total', null);
+  const totOtrosIng = calcSection(recOrdData)+calcSection(finIngData)+calcSection(extrData);
+  if($('met-otros-ing')) $('met-otros-ing').innerHTML=`
+    <div class="metric"><div class="mlabel">Recursos Ord. Otros (413)</div><div class="mval pos">${fmt(calcSection(recOrdData))}</div></div>
+    <div class="metric"><div class="mlabel">Financieros (415)</div><div class="mval pos">${fmt(calcSection(finIngData))}</div></div>
+    <div class="metric"><div class="mlabel">Extraordinarios (421)</div><div class="mval pos">${fmt(calcSection(extrData))}</div></div>
+    <div class="metric"><div class="mlabel">Total Otros Ing.</div><div class="mval pos">${fmt(totOtrosIng)}</div></div>
+  `;
+  updateVars(recOrdData); updateVars(finIngData); updateVars(extrData);
+
+  // Egresos
+  updateSection(personalData, 'personal-total', 'met-personal');
+  updateSection(serviciosData, 'servicios-total', 'met-servicios');
+  updateSection(admData, 'administrativos-total', 'met-administrativos');
+  updateSection(comData, 'com-total', null);
+  updateSection(otrosEgrData, 'otros-egr-total', null);
+  updateSection(egrFinData, 'egr-fin-total', null);
+  const totCom = calcSection(comData)+calcSection(otrosEgrData)+calcSection(egrFinData);
+  if($('met-comunidades')) $('met-comunidades').innerHTML=`
+    <div class="metric"><div class="mlabel">Gastos Comunidades (515)</div><div class="mval neg">${fmt(calcSection(comData))}</div></div>
+    <div class="metric"><div class="mlabel">Otros Gastos (516)</div><div class="mval neg">${fmt(calcSection(otrosEgrData))}</div></div>
+    <div class="metric"><div class="mlabel">Egresos Financieros (519)</div><div class="mval neg">${fmt(calcSection(egrFinData))}</div></div>
+    <div class="metric"><div class="mlabel">Total</div><div class="mval neg">${fmt(totCom)}</div></div>
+  `;
+  updateVars(comData); updateVars(otrosEgrData); updateVars(egrFinData);
+
+  updateSection(apColData, 'ap-col-total', null);
+  updateSection(apComData, 'ap-com-total', null);
+  const totAE = calcSection(apColData)+calcSection(apComData);
+  if($('met-aportes-egr')) $('met-aportes-egr').innerHTML=`
+    <div class="metric"><div class="mlabel">Aportes a Colegios (518)</div><div class="mval neg">${fmt(calcSection(apColData))}</div></div>
+    <div class="metric"><div class="mlabel">Aportes Comunidades (519)</div><div class="mval neg">${fmt(calcSection(apComData))}</div></div>
+    <div class="metric"><div class="mlabel">Total Aportes Otorgados</div><div class="mval neg">${fmt(totAE)}</div></div>
+  `;
+  updateVars(apColData); updateVars(apComData);
+
+  updateResumen();
+}
+
+// ─── GUARDAR / CARGAR ───
+function capturarEstado() {
+  const vals = {};
+  allRows().forEach(r => { vals[r.id] = rowVal(r.id); });
+  acFields.forEach(f => { vals[f.id] = parseFloat($(f.id)?.value||0)||0; });
+  pcFields.forEach(f => { vals[f.id] = parseFloat($(f.id)?.value||0)||0; });
+  vals.notas = $('notas')?.textContent||'';
+  vals.locItems = JSON.parse(JSON.stringify(locItems));
+  vals.invItems = JSON.parse(JSON.stringify(invItems));
+  vals.v = 1;
+  return vals;
+}
+function guardarEstado() {
+  const estado = capturarEstado();
+  const blob = new Blob([JSON.stringify(estado, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const fecha = new Date().toISOString().slice(0,10);
+  a.download = `estado_presupuesto_centroadm_${fecha}.json`;
+  a.click();
+}
+function cargarEstado(event) {
+  const file = event.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const estado = JSON.parse(e.target.result);
+      if(!estado.v) throw new Error('Archivo inválido');
+      aplicarEstado(estado);
+      event.target.value='';
+    } catch(err) { alert('Error: ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+function aplicarEstado(estado) {
+  allRows().forEach(r => {
+    if(estado[r.id] !== undefined) {
+      const i=$(r.id); if(i) i.value=estado[r.id];
+      const d=$(r.id+'-disp'); if(d) d.textContent=fmt(estado[r.id]);
+    }
+  });
+  acFields.forEach(f => {
+    if(estado[f.id]!==undefined) {
+      const i=$(f.id); if(i) i.value=estado[f.id];
+      const d=$(f.id+'-disp'); if(d) d.textContent=fmt(estado[f.id]);
+    }
+  });
+  pcFields.forEach(f => {
+    if(estado[f.id]!==undefined) {
+      const i=$(f.id); if(i) i.value=estado[f.id];
+      const d=$(f.id+'-disp'); if(d) d.textContent=fmt(estado[f.id]);
+    }
+  });
+  if(estado.notas && $('notas')) $('notas').textContent=estado.notas;
+  if(estado.locItems) { locItems=estado.locItems; _locSeq=locItems.length+1; renderAlquileres(); }
+  if(estado.invItems) { invItems=estado.invItems; _invSeq=invItems.length+1; renderInv(); }
+  updateAll();
+}
+
+// ─── EXPORT CSV ───
+function exportarCSV() {
+  const rows = [['Código','Descripción','Referencia 2025','Presupuesto 2026','Variación']];
+  const secs = [
+    {label:'INGRESOS — Aportes Colegios/Comunidades', data:aportesData},
+    {label:'INGRESOS — Alquileres (Locales detalle)', data:locItems.map(it=>({cod:'414002',label:it.label,ref:0,id:it.id}))},
+    {label:'INGRESOS — Alquileres (Otros)', data:alquileresDataResto},
+    {label:'INGRESOS — Recursos Ord. Otros', data:recOrdData},
+    {label:'INGRESOS — Financieros', data:finIngData},
+    {label:'INGRESOS — Extraordinarios', data:extrData},
+    {label:'EGRESOS — Personal', data:personalData},
+    {label:'EGRESOS — Servicios Terceros', data:serviciosData},
+    {label:'EGRESOS — Administrativos', data:admData},
+    {label:'EGRESOS — Comunidades', data:comData},
+    {label:'EGRESOS — Otros', data:otrosEgrData},
+    {label:'EGRESOS — Egresos Financieros', data:egrFinData},
+    {label:'APORTES OTORGADOS — Colegios', data:apColData},
+    {label:'APORTES OTORGADOS — Comunidades', data:apComData},
+  ];
+  secs.forEach(s => {
+    rows.push([s.label,'','','','']);
+    s.data.forEach(r => {
+      const v = rowVal(r.id);
+      rows.push([r.cod, r.label, r.ref, v, v-r.ref]);
+    });
+  });
+  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = 'presupuesto_centroadm_2026.csv';
+  a.click();
+}
+
+// ─── INIT ───
+function init() {
+  initInicio();
+  renderTable('aportes-body', aportesData);
+  renderAlquileres();
+  renderTable('rec-ord-body', recOrdData);
+  renderTable('fin-ing-body', finIngData);
+  renderTable('extr-body', extrData);
+  renderTable('personal-body', personalData);
+  renderTable('servicios-body', serviciosData);
+  renderTable('administrativos-body', admData);
+  renderTable('com-body', comData);
+  renderTable('otros-egr-body', otrosEgrData);
+  renderTable('egr-fin-body', egrFinData);
+  renderTable('ap-col-body', apColData);
+  renderTable('ap-com-body', apComData);
+  renderInv();
+  updateAll();
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
