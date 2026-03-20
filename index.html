@@ -5,6 +5,86 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Presupuesto 2026 — Centro Administrativo</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet">
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, onSnapshot }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAcSapL9kW3wqmUlvjUtMNDT5DK_0yNwf8",
+    authDomain: "csc-agenda-estrategica.firebaseapp.com",
+    projectId: "csc-agenda-estrategica",
+    storageBucket: "csc-agenda-estrategica.firebasestorage.app",
+    messagingSenderId: "550972493263",
+    appId: "1:550972493263:web:67d054abdcf30fa691d6ba"
+  };
+
+  const app = initializeApp(firebaseConfig, "centro-adm");
+  const db  = getFirestore(app);
+  const DOC = doc(db, "presupuesto-centro-adm", "2026");
+
+  const MY_TAB = Math.random().toString(36).slice(2);
+
+  // ── GUARDAR ──
+  window._fbSave = async (estado) => {
+    try {
+      await setDoc(DOC, { ...estado, _tab: MY_TAB, _reload: false });
+    } catch(e) { console.error("Firebase save error:", e); }
+  };
+
+  // ── FORZAR RECARGA EN TODOS LOS DISPOSITIVOS ──
+  window._fbForceSync = async () => {
+    if (!window._fbSave) return;
+    const estado = window._capturarEstado ? window._capturarEstado() : {};
+    await setDoc(DOC, { ...estado, _tab: MY_TAB, _reload: true });
+  };
+
+  // ── LISTENER ──
+  let _firstLoad = true;
+  onSnapshot(DOC, snap => {
+    if (!snap.exists()) return;
+    const data = snap.data();
+    if (!data) return;
+
+    if (data._tab === MY_TAB) {
+      if (typeof setSyncStatus === "function") setSyncStatus("live");
+      return;
+    }
+
+    if (data._reload === true && !_firstLoad) {
+      setTimeout(() => location.reload(), 300);
+      return;
+    }
+
+    if (_firstLoad) {
+      _firstLoad = false;
+      setTimeout(() => {
+        if (typeof aplicarEstado === "function") {
+          window._applying = true;
+          aplicarEstado(data);
+          setTimeout(() => {
+            window._applying = false;
+            if (typeof setSyncStatus === "function") setSyncStatus("live");
+          }, 1200);
+        }
+        window._appReady = true;
+        if (typeof setSyncStatus === "function") setSyncStatus("live");
+      }, 400);
+      return;
+    }
+
+    if (!window._appReady || window._applying) return;
+    window._applying = true;
+    if (typeof aplicarEstado === "function") aplicarEstado(data);
+    setTimeout(() => {
+      window._applying = false;
+      if (typeof setSyncStatus === "function") setSyncStatus("live");
+    }, 1200);
+
+  }, err => {
+    if (typeof setSyncStatus === "function") setSyncStatus("error");
+  });
+</script>
 <style>
 :root {
   --bg: #F5F3EE;
@@ -327,8 +407,13 @@ tr.acc-subtotal td {
   </div>
   <span>PRESUPUESTO 2026 · PERÍODO MAR 2026 – FEB 2027</span>
   <div class="header-right">
-    <button class="btn" style="padding:5px 12px;font-size:11px;color:#4A9E6A;border-color:#4A9E6A" onclick="guardarEstado()">💾 exportar JSON</button>
-    <button class="btn" style="padding:5px 12px;font-size:11px;color:#6A9EC4;border-color:#6A9EC4" onclick="$('cargar-inp').click()">📂 importar JSON</button>
+    <span id="sync-status" style="font-size:11px;padding:3px 10px;border-radius:12px;background:#e8f5e9;color:#2e7d32;font-weight:500;display:inline-flex;align-items:center;gap:5px">
+      <span id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:#4caf50;display:inline-block"></span>
+      <span id="sync-text">conectando...</span>
+    </span>
+    <button class="btn" onclick="forzarSincronizacion()" style="padding:5px 14px;font-size:11px;background:#2D5A3D;color:#fff;border-color:#2D5A3D;font-weight:600" title="Guarda y fuerza recarga en todos los dispositivos">🔄 sincronizar</button>
+    <button class="btn" style="padding:5px 12px;font-size:11px;color:#4A9E6A;border-color:#4A9E6A" onclick="guardarEstado()">💾 backup JSON</button>
+    <button class="btn" style="padding:5px 12px;font-size:11px;color:#6A9EC4;border-color:#6A9EC4" onclick="$('cargar-inp').click()">📂 restaurar JSON</button>
     <input type="file" id="cargar-inp" accept=".json" style="display:none" onchange="cargarEstado(event)">
     <button class="btn" style="padding:5px 12px;font-size:11px;color:var(--bg);border-color:#555" onclick="exportarCSV()">↓ CSV</button>
     <button class="btn" style="padding:5px 12px;font-size:11px;color:var(--bg);border-color:#555" onclick="window.print()">imprimir</button>
@@ -802,6 +887,29 @@ const fmt = v => {
   return v < 0 ? '(' + s + ')' : s;
 };
 const pct = (v, ref) => ref > 0 ? ((v - ref) / ref * 100).toFixed(0) + '%' : '—';
+
+// ─── SYNC STATUS ───
+function setSyncStatus(state) {
+  const dot=$('sync-dot'), text=$('sync-text'), wrap=$('sync-status');
+  if(!dot||!text||!wrap) return;
+  if(state==='live') {
+    dot.style.background='#4caf50'; text.textContent='en línea';
+    wrap.style.background='#e8f5e9'; wrap.style.color='#2e7d32';
+  } else if(state==='saving') {
+    dot.style.background='#ff9800'; text.textContent='guardando...';
+    wrap.style.background='#fff3e0'; wrap.style.color='#e65100';
+  } else {
+    dot.style.background='#f44336'; text.textContent='sin conexión';
+    wrap.style.background='#ffebee'; wrap.style.color='#c62828';
+  }
+}
+
+function forzarSincronizacion() {
+  if(window._fbForceSync) {
+    setSyncStatus('saving');
+    window._fbForceSync();
+  }
+}
 
 // ─── NAV ───
 function goTab(id, el) {
@@ -1338,6 +1446,16 @@ function updateResumen() {
     <div class="metric"><div class="mlabel">Posición Final</div><div class="mval ${posFinal>=0?'pos':'neg'}">${fmt(posFinal)}</div></div>
   `;
 
+  // Auto-save to Firebase
+  if (window._appReady && !window._applying && window._fbSave) {
+    clearTimeout(window._saveTimer);
+    window._saveTimer = setTimeout(() => {
+      setSyncStatus('saving');
+      const estado = capturarEstado();
+      window._fbSave(estado);
+    }, 1500);
+  }
+
   return {totIng, totEgr, resultado};
 }
 
@@ -1413,6 +1531,7 @@ function updateAll() {
 }
 
 // ─── GUARDAR / CARGAR ───
+window._capturarEstado = capturarEstado;
 function capturarEstado() {
   const vals = {};
   allRows().forEach(r => { vals[r.id] = rowVal(r.id); });
@@ -1522,6 +1641,13 @@ function init() {
   renderTable('ap-com-body', apComData);
   renderInv();
   updateAll();
+  // Si Firebase no responde en 3s, arrancar igual
+  setTimeout(() => {
+    if (!window._appReady) {
+      window._appReady = true;
+      setSyncStatus('error');
+    }
+  }, 3000);
 }
 
 window.addEventListener('DOMContentLoaded', init);
