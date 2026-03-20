@@ -29,7 +29,12 @@
   window._fbSave = async (estado) => {
     try {
       await setDoc(DOC, { ...estado, _tab: MY_TAB, _reload: false });
-    } catch(e) { console.error("Firebase save error:", e); }
+      // Confirmar guardado en el propio tab
+      if (typeof setSyncStatus === 'function') setSyncStatus('live');
+    } catch(e) {
+      console.error("Firebase save error:", e);
+      if (typeof setSyncStatus === 'function') setSyncStatus('error');
+    }
   };
 
   // ── FORZAR RECARGA EN TODOS LOS DISPOSITIVOS ──
