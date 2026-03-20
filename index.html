@@ -904,10 +904,11 @@ function setSyncStatus(state) {
   }
 }
 
-function forzarSincronizacion() {
+async function forzarSincronizacion() {
   if(window._fbForceSync) {
     setSyncStatus('saving');
-    window._fbForceSync();
+    await window._fbForceSync();
+    setSyncStatus('live');
   }
 }
 
@@ -1449,10 +1450,11 @@ function updateResumen() {
   // Auto-save to Firebase
   if (window._appReady && !window._applying && window._fbSave) {
     clearTimeout(window._saveTimer);
-    window._saveTimer = setTimeout(() => {
+    window._saveTimer = setTimeout(async () => {
       setSyncStatus('saving');
       const estado = capturarEstado();
-      window._fbSave(estado);
+      await window._fbSave(estado);
+      setSyncStatus('live');
     }, 1500);
   }
 
