@@ -1110,113 +1110,242 @@ const aportesData = [
   {id:'ap-cros', cod:'412017', label:'Comunidad Ssmo. Rosario (R)',      ref:12769570},
 ];
 
-// ─── ALQUILERES LOCALES: detalle por inquilino ───
+// ─── ALQUILERES: detalle expandible por cuenta ───
+// Estructura genérica: {id, label, ref, val, pct}
 let locItems = [
-  {id:'loc-1', label:'Inquilino 1', val:0},
+  {id:'loc-1', label:'Inquilino 1', ref:0, val:0, pct:''},
 ];
 let _locSeq = 2;
 
-function addLoc() {
-  locItems.push({id:'loc-'+(_locSeq++), label:'Inquilino '+(_locSeq-1), val:0});
-  renderAlquileres();
+let albItems = [
+  {id:'alb-1', label:'Albergue 1', ref:0, val:0, pct:''},
+];
+let _albSeq = 2;
+
+// ── helpers ──
+function itemTotal(items) {
+  return items.reduce((s,it) => {
+    const el = document.getElementById(it.id+'-val');
+    return s + (el ? (parseFloat(el.value)||0) : (it.val||0));
+  }, 0);
+}
+function itemRefTotal(items) {
+  return items.reduce((s,it) => s + (it.ref||0), 0);
+}
+function locTotal()  { return itemTotal(locItems); }
+function albTotal()  { return itemTotal(albItems); }
+
+function addItem(arr, prefix, seqFn, label) {
+  const seq = seqFn();
+  arr.push({id:prefix+'-'+seq, label:label+' '+seq, ref:0, val:0, pct:''});
+}
+function addLoc() { _locSeq++; locItems.push({id:'loc-'+(_locSeq-1), label:'Inquilino '+(_locSeq-1), ref:0, val:0, pct:''}); renderAlquileres(); updateAll(); }
+function delLoc(id) { locItems=locItems.filter(x=>x.id!==id); renderAlquileres(); updateAll(); }
+function addAlb() { _albSeq++; albItems.push({id:'alb-'+(_albSeq-1), label:'Albergue '+(_albSeq-1), ref:0, val:0, pct:''}); renderAlquileres(); updateAll(); }
+function delAlb(id) { albItems=albItems.filter(x=>x.id!==id); renderAlquileres(); updateAll(); }
+
+function applyItemPct(arr, idx) {
+  const it = arr[idx];
+  const p = parseFloat(document.getElementById(it.id+'-pct')?.value||'');
+  if(isNaN(p)||!it.ref) return;
+  const v = Math.round(it.ref*(1+p/100));
+  it.val = v;
+  it.pct = p;
+  const vi = document.getElementById(it.id+'-val'); if(vi) vi.value = v;
+  const vd = document.getElementById(it.id+'-val-disp'); if(vd) vd.textContent = fmt(v);
+  const key = arr === locItems ? 'loc' : 'alb';
+  calcExpandable(key);
   updateAll();
 }
-function delLoc(id) {
-  locItems = locItems.filter(x=>x.id!==id);
-  renderAlquileres();
-  updateAll();
+
+function calcExpandable(key) {
+  const arr = key==='loc' ? locItems : albItems;
+  const refGlobal = key==='loc' ? 316634298 : 6327269;
+  const tot = itemTotal(arr);
+  const refSum = itemRefTotal(arr);
+
+  // Header total & var
+  const el=$(key+'-tot'); if(el) el.textContent=fmt(tot);
+  const varEl=$(key+'-var');
+  if(varEl) {
+    const diff = tot - refGlobal;
+    const p = refGlobal!==0 ? ((diff/refGlobal)*100).toFixed(0) : '—';
+    varEl.textContent = (diff!==0?fmt(diff):'—') + (p!=='—'?' ('+p+'%)':'');
+    varEl.style.color = diff>0?'var(--danger)':diff<0?'var(--accent)':'var(--text3)';
+  }
+
+  // Aviso si suma de refs no coincide con ref global
+  const warnEl=$(key+'-ref-warn');
+  if(warnEl) {
+    if(refSum>0 && Math.abs(refSum-refGlobal)>1) {
+      warnEl.textContent = '⚠ refs suman '+fmt(refSum)+' ≠ '+fmt(refGlobal);
+      warnEl.style.display='inline';
+    } else {
+      warnEl.style.display='none';
+    }
+  }
 }
-function locTotal() {
-  return locItems.reduce((s,it) => s + (parseFloat(document.getElementById(it.id)?.value||0)||0), 0);
+
+function renderDetailRows(arr, key, addFn, delFn, pctFn) {
+  let html = '';
+  const open = key==='loc' ? _locOpen : _albOpen;
+  arr.forEach((it, i) => {
+    const refFmt = it.ref ? fmt(it.ref) : '';
+    html += `<tr class="${key}-detail-row" style="display:${open?'':'none'};background:var(--surface)">
+      <td style="padding-left:12px!important"></td>
+      <td style="padding-left:28px!important">
+        <input value="${it.label}" placeholder="Descripción"
+          oninput="${key}Items[${i}].label=this.value"
+          style="width:200px;border:none;border-bottom:1px solid var(--border2);background:transparent;font-family:'DM Mono',monospace;font-size:12.5px;padding:2px 4px">
+      </td>
+      <td class="r" style="white-space:nowrap">
+        <span id="${it.id}-ref-disp" style="cursor:text;font-size:11.5px;color:var(--text3);min-width:80px;display:inline-block;text-align:right"
+          onclick="editItemRef('${key}',${i})"
+          title="Clic para editar referencia 2025">${refFmt || '$ —'}</span>
+        <input type="number" id="${it.id}-ref" value="${it.ref||''}" placeholder="0"
+          onblur="cerrarItemRef('${key}',${i})"
+          onkeydown="if(event.key==='Enter')this.blur()"
+          style="display:none;width:110px;text-align:right;padding:2px 5px;border:1px solid var(--border2);border-radius:4px;font-family:'DM Mono',monospace;font-size:11.5px;background:var(--surface)">
+      </td>
+      <td class="r" style="width:80px">
+        <div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
+          <input type="number" id="${it.id}-pct" value="${it.pct||''}" placeholder="—"
+            oninput="${key}Items[${i}].pct=this.value;apply${key.charAt(0).toUpperCase()+key.slice(1)}ItemPct(${i})"
+            style="width:50px;text-align:right;padding:2px 5px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:11.5px;background:var(--bg);color:var(--warn)">
+          <span style="font-size:10px;color:var(--text3)">%</span>
+        </div>
+      </td>
+      <td class="r">
+        <span id="${it.id}-val-disp" style="font-size:12.5px;font-weight:500;cursor:text;min-width:80px;display:inline-block;text-align:right"
+          onclick="editItemVal('${key}',${i})"
+          title="Clic para editar presupuesto 2026">${fmt(it.val||0)}</span>
+        <input type="number" id="${it.id}-val" value="${it.val||0}" placeholder="0"
+          onblur="cerrarItemVal('${key}',${i})"
+          onkeydown="if(event.key==='Enter')this.blur()"
+          oninput="${key}Items[${i}].val=parseFloat(this.value)||0;calcExpandable('${key}');updateAll()"
+          style="display:none;width:130px;text-align:right;padding:3px 6px;border:1px solid var(--border2);border-radius:4px;font-family:'DM Mono',monospace;font-size:12.5px;background:var(--surface)">
+      </td>
+      <td class="r">
+        <button onclick="${delFn}('${it.id}')" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:13px" title="Eliminar">✕</button>
+      </td>
+    </tr>`;
+  });
+  html += `<tr class="${key}-detail-row" style="display:${open?'':'none'};background:var(--surface)">
+    <td colspan="6" style="padding:4px 16px 4px 48px">
+      <button onclick="${addFn}()" style="font-size:11px;color:var(--accent);background:none;border:1px dashed var(--accent);border-radius:4px;padding:3px 10px;cursor:pointer">+ agregar ítem</button>
+    </td>
+  </tr>`;
+  return html;
 }
+
+function editItemRef(key, i) {
+  const arr = key==='loc' ? locItems : albItems;
+  const it = arr[i];
+  const disp=$(it.id+'-ref-disp'), inp=$(it.id+'-ref');
+  if(!disp||!inp) return;
+  disp.style.display='none'; inp.style.display='inline-block'; inp.focus(); inp.select();
+}
+function cerrarItemRef(key, i) {
+  const arr = key==='loc' ? locItems : albItems;
+  const it = arr[i];
+  const disp=$(it.id+'-ref-disp'), inp=$(it.id+'-ref');
+  if(!disp||!inp) return;
+  const v = parseFloat(inp.value)||0;
+  arr[i].ref = v;
+  disp.textContent = v ? fmt(v) : '$ —';
+  inp.style.display='none'; disp.style.display='inline-block';
+  calcExpandable(key);
+  // Auto-apply pct if already set
+  const pctEl=$(it.id+'-pct');
+  if(pctEl && pctEl.value) {
+    if(key==='loc') applyLocItemPct(i); else applyAlbItemPct(i);
+  }
+}
+function editItemVal(key, i) {
+  const arr = key==='loc' ? locItems : albItems;
+  const it = arr[i];
+  const disp=$(it.id+'-val-disp'), inp=$(it.id+'-val');
+  if(!disp||!inp) return;
+  disp.style.display='none'; inp.style.display='inline-block'; inp.focus(); inp.select();
+}
+function cerrarItemVal(key, i) {
+  const arr = key==='loc' ? locItems : albItems;
+  const it = arr[i];
+  const disp=$(it.id+'-val-disp'), inp=$(it.id+'-val');
+  if(!disp||!inp) return;
+  const v = parseFloat(inp.value)||0;
+  arr[i].val = v;
+  disp.textContent = fmt(v);
+  inp.style.display='none'; disp.style.display='inline-block';
+  calcExpandable(key); updateAll();
+}
+
+// Handlers de pct por array
+function applyLocItemPct(i) { applyItemPct(locItems, i); }
+function applyAlbItemPct(i) { applyItemPct(albItems, i); }
 
 function renderAlquileres() {
   const b=$('alquileres-body');
   if(!b) return;
 
-  // Fila grupo 414002 expandible
-  const tot414002 = locTotal();
-  const ref414002 = 316634298;
-
   let html = '';
-  // Fila encabezado expandible
-  html += `<tr id="alq-loc-hdr" style="cursor:pointer;background:var(--surface2)" onclick="toggleLocales()">
+
+  // ── 414002 Alquiler Locales Comerciales ──
+  html += `<tr style="cursor:pointer;background:var(--surface2)" onclick="toggleExpandable('loc')">
     <td class="muted" style="font-size:10.5px;padding-left:12px!important">414002</td>
     <td style="padding-left:12px!important">
       <span id="loc-toggle-icon" style="display:inline-block;width:14px;font-size:10px;transition:transform .15s;margin-right:4px">▶</span>
       Alquiler Locales Comerciales
+      <span id="loc-ref-warn" style="display:none;font-size:10px;color:var(--warn);margin-left:8px"></span>
     </td>
-    <td class="r" style="color:var(--text3);font-size:12px">${fmt(ref414002)}</td>
+    <td class="r" style="color:var(--text3);font-size:12px">${fmt(316634298)}</td>
     <td class="r"></td>
-    <td class="r" style="font-weight:500" id="alq-loc-tot">${fmt(tot414002)}</td>
-    <td class="r" id="alq-loc-var" style="font-size:12px;color:var(--text3)">—</td>
+    <td class="r" style="font-weight:500" id="loc-tot">${fmt(locTotal())}</td>
+    <td class="r" id="loc-var" style="font-size:12px;color:var(--text3)">—</td>
   </tr>`;
+  html += renderDetailRows(locItems, 'loc', 'addLoc', 'delLoc', 'applyLocItemPct');
 
-  // Filas detalle (ocultables)
-  locItems.forEach((it, i) => {
-    html += `<tr class="loc-detail-row" style="display:none;background:var(--surface)">
-      <td style="padding-left:12px!important"></td>
-      <td style="padding-left:36px!important">
-        <input value="${it.label}" placeholder="Inquilino / Local"
-          oninput="locItems[${i}].label=this.value"
-          style="width:200px;border:none;border-bottom:1px solid var(--border2);background:transparent;font-family:'DM Mono',monospace;font-size:12.5px;padding:2px 4px">
-      </td>
-      <td></td>
-      <td></td>
-      <td class="r">
-        <input type="number" id="${it.id}" value="${it.val}" placeholder="0"
-          oninput="locItems[${i}].val=parseFloat(this.value)||0;calcAlqLoc();updateAll()"
-          style="width:130px;text-align:right;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12.5px;background:var(--bg)">
-      </td>
-      <td class="r">
-        <button onclick="delLoc('${it.id}')" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:13px" title="Eliminar">✕</button>
-      </td>
-    </tr>`;
-  });
-
-  // Fila botón agregar (dentro del bloque expandible)
-  html += `<tr class="loc-detail-row" style="display:none;background:var(--surface)">
-    <td colspan="6" style="padding:4px 16px 4px 48px">
-      <button onclick="addLoc()" style="font-size:11px;color:var(--accent);background:none;border:1px dashed var(--accent);border-radius:4px;padding:3px 10px;cursor:pointer">+ agregar inquilino</button>
+  // ── 414008 Albergues ──
+  html += `<tr style="cursor:pointer;background:var(--surface2)" onclick="toggleExpandable('alb')">
+    <td class="muted" style="font-size:10.5px;padding-left:12px!important">414008</td>
+    <td style="padding-left:12px!important">
+      <span id="alb-toggle-icon" style="display:inline-block;width:14px;font-size:10px;transition:transform .15s;margin-right:4px">▶</span>
+      Albergues
+      <span id="alb-ref-warn" style="display:none;font-size:10px;color:var(--warn);margin-left:8px"></span>
     </td>
+    <td class="r" style="color:var(--text3);font-size:12px">${fmt(6327269)}</td>
+    <td class="r"></td>
+    <td class="r" style="font-weight:500" id="alb-tot">${fmt(albTotal())}</td>
+    <td class="r" id="alb-var" style="font-size:12px;color:var(--text3)">—</td>
   </tr>`;
+  html += renderDetailRows(albItems, 'alb', 'addAlb', 'delAlb', 'applyAlbItemPct');
 
-  // Resto de alquileres
-  const resto = [
-    {id:'alq-alb',  cod:'414008', label:'Albergues',          ref:6327269},
-    {id:'alq-mus',  cod:'414009', label:'Museo Elmina',        ref:150000},
-    {id:'alq-vbu',  cod:'414011', label:'Venta Bienes de Uso', ref:450805400},
-  ];
-  resto.forEach(r => { html += makeRow(r); });
+  // ── Resto ──
+  [{id:'alq-mus', cod:'414009', label:'Museo Elmina', ref:150000},
+   {id:'alq-vbu', cod:'414011', label:'Venta Bienes de Uso', ref:450805400}
+  ].forEach(r => { html += makeRow(r); });
 
   b.innerHTML = html;
-  calcAlqLoc();
+  calcExpandable('loc');
+  calcExpandable('alb');
 }
 
 let _locOpen = false;
-function toggleLocales() {
-  _locOpen = !_locOpen;
-  document.querySelectorAll('.loc-detail-row').forEach(r => r.style.display = _locOpen ? '' : 'none');
-  const icon=$('loc-toggle-icon');
-  if(icon) icon.style.transform = _locOpen ? 'rotate(90deg)' : '';
+let _albOpen = false;
+function toggleExpandable(key) {
+  if(key==='loc') { _locOpen=!_locOpen; }
+  else            { _albOpen=!_albOpen; }
+  const open = key==='loc' ? _locOpen : _albOpen;
+  document.querySelectorAll(`.${key}-detail-row`).forEach(r => r.style.display = open ? '' : 'none');
+  const icon=$(key+'-toggle-icon');
+  if(icon) icon.style.transform = open ? 'rotate(90deg)' : '';
 }
 
-function calcAlqLoc() {
-  const tot = locTotal();
-  const ref = 316634298;
-  const el=$('alq-loc-tot'); if(el) el.textContent=fmt(tot);
-  const varEl=$('alq-loc-var');
-  if(varEl) {
-    const diff = tot - ref;
-    const p = ref!==0 ? ((diff/ref)*100).toFixed(0) : '—';
-    varEl.textContent = (diff!==0?fmt(diff):'—') + (p!=='—'?' ('+p+'%)':'');
-    varEl.style.color = diff>0?'var(--danger)':diff<0?'var(--accent)':'var(--text3)';
-  }
-}
+// Keep calcAlqLoc as alias for compatibility
+function calcAlqLoc() { calcExpandable('loc'); calcExpandable('alb'); }
 
-// alquileresData solo para calcSection (sin alq-loc, ese se suma aparte)
+// alquileresDataResto: solo Museo y Venta (loc y alb son expandibles)
 const alquileresDataResto = [
-  {id:'alq-alb',  cod:'414008', label:'Albergues',          ref:6327269},
   {id:'alq-mus',  cod:'414009', label:'Museo Elmina',        ref:150000},
   {id:'alq-vbu',  cod:'414011', label:'Venta Bienes de Uso', ref:450805400},
 ];
@@ -1421,7 +1550,7 @@ function calcInv() {
 // ─── RESUMEN ───
 function updateResumen() {
   const totAp  = calcSection(aportesData);
-  const totAlq = locTotal() + calcSection(alquileresDataResto);
+  const totAlq = locTotal() + albTotal() + calcSection(alquileresDataResto);
   const totRO  = calcSection(recOrdData);
   const totFI  = calcSection(finIngData);
   const totEx  = calcSection(extrData);
@@ -1535,8 +1664,8 @@ function updateAll() {
   // Ingresos
   updateSection(aportesData, 'aportes-total', 'met-aportes');
   // Alquileres: incluye locales (detalle) + resto
-  const _totAlqAll = locTotal() + calcSection(alquileresDataResto);
-  const _refAlqAll = 316634298 + alquileresDataResto.reduce((s,r)=>s+r.ref,0);
+  const _totAlqAll = locTotal() + albTotal() + calcSection(alquileresDataResto);
+  const _refAlqAll = 316634298 + 6327269 + alquileresDataResto.reduce((s,r)=>s+r.ref,0);
   const _alqEl=$('alquileres-total'); if(_alqEl) _alqEl.textContent=fmt(_totAlqAll);
   if($('met-alquileres')) $('met-alquileres').innerHTML=`
     <div class="metric"><div class="mlabel">Referencia 2025</div><div class="mval">${fmt(_refAlqAll)}</div></div>
@@ -1600,6 +1729,7 @@ function capturarEstado() {
     vals._rowMeta[r.id] = {label: r.label, cod: r.cod, ref: r.ref};
   });
   vals.locItems = JSON.parse(JSON.stringify(locItems));
+  vals.albItems = JSON.parse(JSON.stringify(albItems));
   vals.invItems = JSON.parse(JSON.stringify(invItems));
   vals.v = 1;
   return vals;
@@ -1660,7 +1790,9 @@ function aplicarEstado(estado) {
       const ri=$(r.id+'-ref');        if(ri) ri.value=m.ref;
     });
   }
-  if(estado.locItems) { locItems=estado.locItems; _locSeq=locItems.length+1; renderAlquileres(); }
+  if(estado.locItems) { locItems=estado.locItems; _locSeq=locItems.length+1; }
+  if(estado.albItems) { albItems=estado.albItems; _albSeq=albItems.length+1; }
+  if(estado.locItems||estado.albItems) renderAlquileres();
   if(estado.invItems) { invItems=estado.invItems; _invSeq=invItems.length+1; renderInv(); }
   updateAll();
 }
