@@ -997,9 +997,24 @@ function makeRow(r) {
   // r = {id, cod, label, ref}
   const pres = r.ref;
   return `<tr id="row-${r.id}">
-    <td class="muted" style="font-size:10.5px">${r.cod}</td>
-    <td>${r.label}</td>
-    <td class="r" style="color:var(--text3);font-size:12px">${fmt(r.ref)}</td>
+    <td class="muted" style="font-size:10.5px;white-space:nowrap">
+      <span id="${r.id}-cod-disp" style="cursor:text" onclick="editRowMeta('${r.id}','cod')" title="Clic para editar código">${r.cod}</span>
+      <input id="${r.id}-cod" value="${r.cod}"
+        style="display:none;width:65px;padding:2px 4px;border:1px solid var(--border2);border-radius:3px;font-family:'DM Mono',monospace;font-size:10.5px;background:var(--surface)"
+        onblur="cerrarRowMeta('${r.id}','cod')" onkeydown="if(event.key==='Enter')this.blur()">
+    </td>
+    <td>
+      <span id="${r.id}-label-disp" style="cursor:text" onclick="editRowMeta('${r.id}','label')" title="Clic para editar descripción">${r.label}</span>
+      <input id="${r.id}-label" value="${r.label}"
+        style="display:none;width:100%;padding:2px 6px;border:1px solid var(--border2);border-radius:3px;font-family:'DM Mono',monospace;font-size:12.5px;background:var(--surface)"
+        onblur="cerrarRowMeta('${r.id}','label')" onkeydown="if(event.key==='Enter')this.blur()">
+    </td>
+    <td class="r" style="white-space:nowrap">
+      <span id="${r.id}-ref-disp" style="color:var(--text3);font-size:12px;cursor:text" onclick="editRowMeta('${r.id}','ref')" title="Clic para editar referencia">${fmt(r.ref)}</span>
+      <input type="number" id="${r.id}-ref" value="${r.ref}"
+        style="display:none;width:120px;text-align:right;padding:2px 6px;border:1px solid var(--border2);border-radius:3px;font-family:'DM Mono',monospace;font-size:12px;background:var(--surface)"
+        onblur="cerrarRowMeta('${r.id}','ref')" onkeydown="if(event.key==='Enter')this.blur()">
+    </td>
     <td class="r" style="width:80px">
       <div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
         <input type="number" id="${r.id}-pct" placeholder="—"
@@ -1016,6 +1031,40 @@ function makeRow(r) {
     </td>
     <td class="r" id="${r.id}-var" style="font-size:12px;color:var(--text3)">—</td>
   </tr>`;
+}
+
+function editRowMeta(id, field) {
+  const disp=$(id+'-'+field+'-disp'), inp=$(id+'-'+field);
+  if(!disp||!inp) return;
+  disp.style.display='none';
+  inp.style.display=(field==='label'?'block':'inline-block');
+  inp.focus(); inp.select();
+}
+
+function cerrarRowMeta(id, field) {
+  const disp=$(id+'-'+field+'-disp'), inp=$(id+'-'+field);
+  if(!disp||!inp) return;
+  const val = field==='ref' ? parseFloat(inp.value)||0 : inp.value.trim();
+  // Update the live data object
+  const r = allRows().find(x=>x.id===id);
+  if(r) {
+    if(field==='ref') {
+      r.ref = val;
+      disp.textContent = fmt(val);
+      // Re-apply pct if set
+      const pctEl=$(id+'-pct');
+      if(pctEl && pctEl.value) aplicarPct(id);
+    } else if(field==='label') {
+      r.label = val;
+      disp.textContent = val;
+    } else if(field==='cod') {
+      r.cod = val;
+      disp.textContent = val;
+    }
+  }
+  inp.style.display='none';
+  disp.style.display='inline';
+  updateAll();
 }
 
 function editCell(id) {
@@ -1545,6 +1594,11 @@ function capturarEstado() {
   acFields.forEach(f => { vals[f.id] = parseFloat($(f.id)?.value||0)||0; });
   pcFields.forEach(f => { vals[f.id] = parseFloat($(f.id)?.value||0)||0; });
   vals.notas = $('notas')?.textContent||'';
+  // Save meta edits (label, cod, ref) for all rows
+  vals._rowMeta = {};
+  allRows().forEach(r => {
+    vals._rowMeta[r.id] = {label: r.label, cod: r.cod, ref: r.ref};
+  });
   vals.locItems = JSON.parse(JSON.stringify(locItems));
   vals.invItems = JSON.parse(JSON.stringify(invItems));
   vals.v = 1;
@@ -1592,6 +1646,20 @@ function aplicarEstado(estado) {
     }
   });
   if(estado.notas && $('notas')) $('notas').textContent=estado.notas;
+  // Restore meta edits
+  if(estado._rowMeta) {
+    allRows().forEach(r => {
+      const m = estado._rowMeta[r.id];
+      if(!m) return;
+      r.label = m.label; r.cod = m.cod; r.ref = m.ref;
+      const ld=$(r.id+'-label-disp'); if(ld) ld.textContent=m.label;
+      const cd=$(r.id+'-cod-disp');   if(cd) cd.textContent=m.cod;
+      const rd=$(r.id+'-ref-disp');   if(rd) rd.textContent=fmt(m.ref);
+      const li=$(r.id+'-label');      if(li) li.value=m.label;
+      const ci=$(r.id+'-cod');        if(ci) ci.value=m.cod;
+      const ri=$(r.id+'-ref');        if(ri) ri.value=m.ref;
+    });
+  }
   if(estado.locItems) { locItems=estado.locItems; _locSeq=locItems.length+1; renderAlquileres(); }
   if(estado.invItems) { invItems=estado.invItems; _invSeq=invItems.length+1; renderInv(); }
   updateAll();
