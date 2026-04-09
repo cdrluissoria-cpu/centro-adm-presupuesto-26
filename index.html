@@ -1130,6 +1130,15 @@ function delAporte(id) {
   renderAportes();
   updateAll();
 }
+function moveAporte(id, dir) {
+  const i = aportesData.findIndex(x => x.id === id);
+  if(i < 0) return;
+  const j = i + dir;
+  if(j < 0 || j >= aportesData.length) return;
+  [aportesData[i], aportesData[j]] = [aportesData[j], aportesData[i]];
+  renderAportes();
+  updateAll();
+}
 
 function renderAportes() {
   const b = $('aportes-body');
@@ -1177,6 +1186,8 @@ function makeRowEditable(r, i) {
     </td>
     <td class="r" style="white-space:nowrap">
       <span id="${r.id}-var" style="font-size:12px;color:var(--text3)">—</span>
+      <button onclick="moveAporte('${r.id}',-1)" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:13px;margin-left:6px" title="Subir">↑</button>
+      <button onclick="moveAporte('${r.id}',1)" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:13px;margin-left:2px" title="Bajar">↓</button>
       <button onclick="delAporte('${r.id}')" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:12px;margin-left:4px" title="Eliminar">✕</button>
     </td>
   </tr>`;
