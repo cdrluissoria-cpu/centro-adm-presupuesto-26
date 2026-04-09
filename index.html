@@ -1005,7 +1005,7 @@ function makeRow(r) {
         style="display:none;width:65px;padding:2px 4px;border:1px solid var(--border2);border-radius:3px;font-family:'DM Mono',monospace;font-size:10.5px;background:var(--surface)"
         onblur="cerrarRowMeta('${r.id}','cod')" onkeydown="if(event.key==='Enter')this.blur()">
     </td>
-    <td>
+    <td style="text-align:left!important">
       <span id="${r.id}-label-disp" style="cursor:text" onclick="editRowMeta('${r.id}','label')" title="Clic para editar descripción">${r.label}</span>
       <input id="${r.id}-label" value="${r.label}"
         style="display:none;width:100%;padding:2px 6px;border:1px solid var(--border2);border-radius:3px;font-family:'DM Mono',monospace;font-size:12.5px;background:var(--surface)"
@@ -1099,7 +1099,7 @@ function rowVal(id) { return parseFloat($(id)?.value||0)||0; }
 function rowRef(id) { return allRows().find(x=>x.id===id)?.ref||0; }
 
 // ─── DATOS ───
-const aportesData = [
+let aportesData = [
   {id:'ap-csc',  cod:'412005', label:'Colegio Santa Catalina',           ref:123593547},
   {id:'ap-csr',  cod:'412006', label:'Colegio Santa Rosa',               ref:243920114},
   {id:'ap-cla',  cod:'412007', label:'Colegio La Asunción',              ref:73024907},
@@ -1111,6 +1111,76 @@ const aportesData = [
   {id:'ap-lasun',cod:'412016', label:'Comunidad La Asunción',            ref:21174478},
   {id:'ap-cros', cod:'412017', label:'Comunidad Ssmo. Rosario (R)',      ref:12769570},
 ];
+// Preload presupuesto values from last saved state
+const _apPreload = {
+  'ap-csc':185770487,'ap-csr':243920114,'ap-cla':73024907,'ap-crmj':91094499,
+  'ap-csf':100583628,'ap-crrj':190451454,'ap-ccm':14471555,'ap-cepg':28143732,
+  'ap-lasun':21174478,'ap-cros':12769570
+};
+let _apSeq = 100; // secuencia para nuevas filas
+
+function addAporte() {
+  const id = 'ap-x' + (_apSeq++);
+  aportesData.push({id, cod:'', label:'Nueva institución', ref:0});
+  renderAportes();
+  updateAll();
+}
+function delAporte(id) {
+  aportesData = aportesData.filter(x => x.id !== id);
+  renderAportes();
+  updateAll();
+}
+
+function renderAportes() {
+  const b = $('aportes-body');
+  if(!b) return;
+  b.innerHTML = aportesData.map((r, i) => makeRowEditable(r, i)).join('') +
+    `<tr><td colspan="6" style="padding:6px 12px">
+      <button onclick="addAporte()" style="font-size:11px;color:var(--accent);background:none;border:1px dashed var(--accent);border-radius:4px;padding:3px 10px;cursor:pointer">+ agregar institución</button>
+    </td></tr>`;
+}
+
+// Variante de makeRow donde cod y label son inputs inline editables
+function makeRowEditable(r, i) {
+  const pres = _apPreload[r.id] !== undefined ? _apPreload[r.id] : r.ref;
+  return `<tr id="row-${r.id}">
+    <td style="font-size:10.5px;padding:4px 8px!important;white-space:nowrap">
+      <input value="${r.cod}" placeholder="Cód."
+        oninput="aportesData[${i}].cod=this.value"
+        style="width:56px;border:none;border-bottom:1px solid var(--border2);background:transparent;font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text3);padding:2px 3px">
+    </td>
+    <td style="text-align:left!important">
+      <input value="${r.label}" placeholder="Institución"
+        oninput="aportesData[${i}].label=this.value"
+        style="width:100%;min-width:180px;border:none;border-bottom:1px solid var(--border2);background:transparent;font-family:'DM Mono',monospace;font-size:12.5px;padding:2px 4px;text-align:left">
+    </td>
+    <td class="r" style="white-space:nowrap">
+      <span id="${r.id}-ref-disp" style="color:var(--text3);font-size:12px;cursor:text"
+        onclick="editRowMeta('${r.id}','ref')" title="Clic para editar referencia">${fmt(r.ref)}</span>
+      <input type="number" id="${r.id}-ref" value="${r.ref}"
+        style="display:none;width:120px;text-align:right;padding:2px 6px;border:1px solid var(--border2);border-radius:3px;font-family:'DM Mono',monospace;font-size:12px;background:var(--surface)"
+        onblur="cerrarRowMeta('${r.id}','ref')" onkeydown="if(event.key==='Enter')this.blur()">
+    </td>
+    <td class="r" style="width:80px">
+      <div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
+        <input type="number" id="${r.id}-pct" placeholder="—"
+          style="width:55px;text-align:right;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;background:var(--bg);color:var(--warn)"
+          oninput="aplicarPct('${r.id}')">
+        <span style="font-size:10px;color:var(--text3)">%</span>
+      </div>
+    </td>
+    <td class="r">
+      <span id="${r.id}-disp" style="font-size:12.5px;font-weight:500;cursor:text" onclick="editCell('${r.id}')">${fmt(pres)}</span>
+      <input type="number" id="${r.id}" value="${pres}"
+        style="display:none;width:130px;text-align:right;padding:3px 6px;border:1px solid var(--border2);border-radius:4px;font-family:'DM Mono',monospace;font-size:12.5px"
+        onblur="cerrarCell('${r.id}')" oninput="clearPct('${r.id}');updateAll()">
+    </td>
+    <td class="r" style="white-space:nowrap">
+      <span id="${r.id}-var" style="font-size:12px;color:var(--text3)">—</span>
+      <button onclick="delAporte('${r.id}')" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:12px;margin-left:4px" title="Eliminar">✕</button>
+    </td>
+  </tr>`;
+}
 
 // ─── ALQUILERES: detalle expandible por cuenta ───
 // Estructura genérica: {id, label, ref, val, pct}
@@ -1726,6 +1796,8 @@ function capturarEstado() {
   pcFields.forEach(f => { vals[f.id] = parseFloat($(f.id)?.value||0)||0; });
   vals.notas = $('notas')?.textContent||'';
   // Save meta edits (label, cod, ref) for all rows
+  // Save aportesData rows (including user-added ones)
+  vals._aportesData = aportesData.map(r => ({id:r.id, cod:r.cod, label:r.label, ref:r.ref}));
   vals._rowMeta = {};
   allRows().forEach(r => {
     vals._rowMeta[r.id] = {label: r.label, cod: r.cod, ref: r.ref};
@@ -1778,6 +1850,12 @@ function aplicarEstado(estado) {
     }
   });
   if(estado.notas && $('notas')) $('notas').textContent=estado.notas;
+  // Restore aportesData (user may have added/removed rows)
+  if(estado._aportesData && estado._aportesData.length) {
+    aportesData.length = 0;
+    estado._aportesData.forEach(r => aportesData.push(r));
+    renderAportes();
+  }
   // Restore meta edits
   if(estado._rowMeta) {
     allRows().forEach(r => {
@@ -1835,7 +1913,7 @@ function exportarCSV() {
 // ─── INIT ───
 function init() {
   initInicio();
-  renderTable('aportes-body', aportesData);
+  renderAportes();
   renderAlquileres();
   renderTable('rec-ord-body', recOrdData);
   renderTable('fin-ing-body', finIngData);
