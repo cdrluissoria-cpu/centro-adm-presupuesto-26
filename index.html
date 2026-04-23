@@ -1100,23 +1100,17 @@ function rowRef(id) { return allRows().find(x=>x.id===id)?.ref||0; }
 
 // ─── DATOS ───
 let aportesData = [
-  {id:'ap-csc',  cod:'412005', label:'Colegio Santa Catalina',           ref:123593547},
-  {id:'ap-csr',  cod:'412006', label:'Colegio Santa Rosa',               ref:243920114},
-  {id:'ap-cla',  cod:'412007', label:'Colegio La Asunción',              ref:73024907},
-  {id:'ap-crmj', cod:'412008', label:'Col. Ssmo. Rosario (M)',           ref:50654352},
-  {id:'ap-csf',  cod:'412009', label:'Col. Sagrada Familia',             ref:100583628},
-  {id:'ap-crrj', cod:'412010', label:'Col. Ssmo. Rosario (R)',           ref:84930338},
-  {id:'ap-ccm',  cod:'412014', label:'Comunidad Casa Madre',             ref:14471555},
-  {id:'ap-cepg', cod:'412015', label:'Comunidad Elmina Paz Gallo',       ref:28143732},
-  {id:'ap-lasun',cod:'412016', label:'Comunidad La Asunción',            ref:21174478},
-  {id:'ap-cros', cod:'412017', label:'Comunidad Ssmo. Rosario (R)',      ref:12769570},
+  {id:'ap-csc',  cod:'412005', label:'Colegio Santa Catalina',      ref:123593547, val:185770487},
+  {id:'ap-csr',  cod:'412006', label:'Colegio Santa Rosa',          ref:243920114, val:243920114},
+  {id:'ap-cla',  cod:'412007', label:'Colegio La Asunción',         ref:158797275, val:73024907},
+  {id:'ap-crmj', cod:'412008', label:'Col. Ssmo. Rosario (M)',      ref:50654352,  val:91094499},
+  {id:'ap-csf',  cod:'412009', label:'Col. Sagrada Familia',        ref:100583628, val:100583628},
+  {id:'ap-crrj', cod:'412010', label:'Col. Ssmo. Rosario (R)',      ref:84930338,  val:190451454},
+  {id:'ap-ccm',  cod:'412014', label:'Comunidad Casa Madre',        ref:14471555,  val:14471555},
+  {id:'ap-cepg', cod:'412015', label:'Comunidad Elmina Paz Gallo',  ref:28143732,  val:28143732},
+  {id:'ap-lasun',cod:'412016', label:'Comunidad La Asunción',       ref:21174478,  val:21174478},
+  {id:'ap-cros', cod:'412017', label:'Comunidad Ssmo. Rosario (R)', ref:12769570,  val:12769570},
 ];
-// Preload presupuesto values from last saved state
-const _apPreload = {
-  'ap-csc':185770487,'ap-csr':243920114,'ap-cla':73024907,'ap-crmj':91094499,
-  'ap-csf':100583628,'ap-crrj':190451454,'ap-ccm':14471555,'ap-cepg':28143732,
-  'ap-lasun':21174478,'ap-cros':12769570
-};
 let _apSeq = 100; // secuencia para nuevas filas
 
 function addAporte() {
@@ -1151,7 +1145,7 @@ function renderAportes() {
 
 // Variante de makeRow donde cod y label son inputs inline editables
 function makeRowEditable(r, i) {
-  const pres = _apPreload[r.id] !== undefined ? _apPreload[r.id] : r.ref;
+  const pres = r.val !== undefined ? r.val : r.ref;
   return `<tr id="row-${r.id}">
     <td style="font-size:10.5px;padding:4px 8px!important;white-space:nowrap">
       <input value="${r.cod}" placeholder="Cód."
@@ -1530,7 +1524,8 @@ const apComData = [
 ];
 
 function allRows() {
-  return [...aportesData,...alquileresDataResto,...recOrdData,...finIngData,...extrData,
+  // aportesData excluded — handled separately with r.val pattern
+  return [...alquileresDataResto,...recOrdData,...finIngData,...extrData,
           ...personalData,...serviciosData,...admData,...comData,...otrosEgrData,
           ...egrFinData,...apColData,...apComData];
 }
@@ -1632,7 +1627,10 @@ function calcInv() {
 
 // ─── RESUMEN ───
 function updateResumen() {
-  const totAp  = calcSection(aportesData);
+  // aportesData uses r.val (DOM-synced), calcSection reads DOM input
+  const totAp  = aportesData.reduce((s,r) => {
+    const el=$(r.id); return s + (el ? (parseFloat(el.value)||0) : (r.val||0));
+  }, 0);
   const totAlq = locTotal() + albTotal() + calcSection(alquileresDataResto);
   const totRO  = calcSection(recOrdData);
   const totFI  = calcSection(finIngData);
@@ -1745,7 +1743,28 @@ function updateAll() {
   calcInicio();
 
   // Ingresos
-  updateSection(aportesData, 'aportes-total', 'met-aportes');
+  // Aportes: manual update (not via calcSection)
+  const _totAp = aportesData.reduce((s,r) => {
+    const el=$(r.id); return s + (el ? (parseFloat(el.value)||0) : (r.val||0));
+  }, 0);
+  const _apEl=$('aportes-total'); if(_apEl) _apEl.textContent=fmt(_totAp);
+  const _apRef = aportesData.reduce((s,r)=>s+r.ref,0);
+  if($('met-aportes')) $('met-aportes').innerHTML=`
+    <div class="metric"><div class="mlabel">Referencia 2025</div><div class="mval">${fmt(_apRef)}</div></div>
+    <div class="metric"><div class="mlabel">Presupuesto 2026</div><div class="mval pos">${fmt(_totAp)}</div></div>
+    <div class="metric"><div class="mlabel">Variación</div><div class="mval ${_totAp>_apRef?'neg':'pos'}">${fmt(_totAp-_apRef)}</div></div>
+  `;
+  // Update variacion per row
+  aportesData.forEach(r => {
+    const v = $(r.id) ? (parseFloat($(r.id).value)||0) : (r.val||0);
+    const varEl=$(r.id+'-var');
+    if(varEl) {
+      const diff = v - r.ref;
+      const p = r.ref!==0 ? ((diff/r.ref)*100).toFixed(0) : '—';
+      varEl.textContent = (diff!==0?fmt(diff):'—') + (p!=='—'?' ('+p+'%)':'');
+      varEl.style.color = diff>0?'var(--danger)':diff<0?'var(--accent)':'var(--text3)';
+    }
+  });
   // Alquileres: incluye locales (detalle) + resto
   const _totAlqAll = locTotal() + albTotal() + calcSection(alquileresDataResto);
   const _refAlqAll = 316634298 + 6327269 + alquileresDataResto.reduce((s,r)=>s+r.ref,0);
@@ -1808,7 +1827,12 @@ function capturarEstado() {
   vals.notas = $('notas')?.textContent||'';
   // Save meta edits (label, cod, ref) for all rows
   // Save aportesData rows (including user-added ones)
-  vals._aportesData = aportesData.map(r => ({id:r.id, cod:r.cod, label:r.label, ref:r.ref}));
+  // Sync DOM input values back into aportesData.val before saving
+  aportesData.forEach(r => {
+    const inp = $(r.id); if(inp) r.val = parseFloat(inp.value)||0;
+    vals[r.id] = r.val || 0;
+  });
+  vals._aportesData = aportesData.map(r => ({id:r.id, cod:r.cod, label:r.label, ref:r.ref, val:r.val||0}));
   vals._rowMeta = {};
   allRows().forEach(r => {
     vals._rowMeta[r.id] = {label: r.label, cod: r.cod, ref: r.ref};
@@ -1861,11 +1885,26 @@ function aplicarEstado(estado) {
     }
   });
   if(estado.notas && $('notas')) $('notas').textContent=estado.notas;
-  // Restore aportesData (user may have added/removed rows)
+  // Restore aportesData — deduplicate, restore val from estado
   if(estado._aportesData && estado._aportesData.length) {
     aportesData.length = 0;
-    estado._aportesData.forEach(r => aportesData.push(r));
+    const seen = new Set();
+    estado._aportesData.forEach(r => {
+      let uid = r.id;
+      if(seen.has(uid)) uid = uid + '_' + Math.random().toString(36).slice(2,6);
+      seen.add(uid);
+      const val = estado[r.id] !== undefined ? estado[r.id] : (r.val || r.ref || 0);
+      aportesData.push({...r, id: uid, val});
+    });
     renderAportes();
+    // Set DOM inputs after render
+    setTimeout(() => {
+      aportesData.forEach(r => {
+        const inp=$(r.id); if(inp) { inp.value=r.val; }
+        const disp=$(r.id+'-disp'); if(disp) disp.textContent=fmt(r.val||0);
+      });
+      updateAll();
+    }, 50);
   }
   // Restore meta edits
   if(estado._rowMeta) {
@@ -1892,7 +1931,7 @@ function aplicarEstado(estado) {
 function exportarCSV() {
   const rows = [['Código','Descripción','Referencia 2025','Presupuesto 2026','Variación']];
   const secs = [
-    {label:'INGRESOS — Aportes Colegios/Comunidades', data:aportesData},
+    {label:'INGRESOS — Aportes Colegios/Comunidades', data:aportesData.map(r=>({...r, id:r.id}))},
     {label:'INGRESOS — Alquileres (Locales detalle)', data:locItems.map(it=>({cod:'414002',label:it.label,ref:0,id:it.id}))},
     {label:'INGRESOS — Alquileres (Otros)', data:alquileresDataResto},
     {label:'INGRESOS — Recursos Ord. Otros', data:recOrdData},
