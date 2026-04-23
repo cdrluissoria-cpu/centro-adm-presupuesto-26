@@ -1100,12 +1100,13 @@ function rowRef(id) { return allRows().find(x=>x.id===id)?.ref||0; }
 
 // ─── DATOS ───
 let aportesData = [
-  {id:'ap-csc',  cod:'412005', label:'Colegio Santa Catalina',      ref:123593547, val:185770487},
-  {id:'ap-csr',  cod:'412006', label:'Colegio Santa Rosa',          ref:243920114, val:243920114},
-  {id:'ap-cla',  cod:'412007', label:'Colegio La Asunción',         ref:158797275, val:73024907},
+  {id:'ap-csc',  cod:'412005', label:'Col. Santa Catalina',         ref:123593547, val:185770487},
+  {id:'ap-csr',  cod:'412006', label:'Col. Santa Rosa',             ref:243920114, val:243920114},
+  {id:'ap-cla',  cod:'412007', label:'Col. La Asunción',            ref:73024907,  val:73024907},
   {id:'ap-crmj', cod:'412008', label:'Col. Ssmo. Rosario (M)',      ref:50654352,  val:91094499},
   {id:'ap-csf',  cod:'412009', label:'Col. Sagrada Familia',        ref:100583628, val:100583628},
   {id:'ap-crrj', cod:'412010', label:'Col. Ssmo. Rosario (R)',      ref:84930338,  val:190451454},
+  {id:'ap-x100', cod:'412012', label:'Col. Sta. Teresita',          ref:0,         val:0},
   {id:'ap-ccm',  cod:'412014', label:'Comunidad Casa Madre',        ref:14471555,  val:14471555},
   {id:'ap-cepg', cod:'412015', label:'Comunidad Elmina Paz Gallo',  ref:28143732,  val:28143732},
   {id:'ap-lasun',cod:'412016', label:'Comunidad La Asunción',       ref:21174478,  val:21174478},
@@ -1890,41 +1891,53 @@ function aplicarEstado(estado) {
     aportesData.length = 0;
     const seen = new Set();
     estado._aportesData.forEach(r => {
+      // Skip blank placeholder rows
+      if(r.label === 'Nueva institución' && !r.cod && !r.ref && !r.val) return;
       let uid = r.id;
       if(seen.has(uid)) uid = uid + '_' + Math.random().toString(36).slice(2,6);
       seen.add(uid);
-      const val = estado[r.id] !== undefined ? estado[r.id] : (r.val || r.ref || 0);
+      // val: prefer _aportesData.val, then top-level key, then ref
+      const val = (r.val !== undefined && r.val !== 0) ? r.val
+                : (estado[r.id] !== undefined ? estado[r.id] : (r.ref || 0));
       aportesData.push({...r, id: uid, val});
     });
-    renderAportes();
-    // Set DOM inputs after render
-    setTimeout(() => {
-      aportesData.forEach(r => {
-        const inp=$(r.id); if(inp) { inp.value=r.val; }
-        const disp=$(r.id+'-disp'); if(disp) disp.textContent=fmt(r.val||0);
-      });
-      updateAll();
-    }, 50);
   }
-  // Restore meta edits
+
+  // Restore meta edits (antes de renderizar)
   if(estado._rowMeta) {
     allRows().forEach(r => {
       const m = estado._rowMeta[r.id];
       if(!m) return;
       r.label = m.label; r.cod = m.cod; r.ref = m.ref;
-      const ld=$(r.id+'-label-disp'); if(ld) ld.textContent=m.label;
-      const cd=$(r.id+'-cod-disp');   if(cd) cd.textContent=m.cod;
-      const rd=$(r.id+'-ref-disp');   if(rd) rd.textContent=fmt(m.ref);
-      const li=$(r.id+'-label');      if(li) li.value=m.label;
-      const ci=$(r.id+'-cod');        if(ci) ci.value=m.cod;
-      const ri=$(r.id+'-ref');        if(ri) ri.value=m.ref;
     });
   }
+
   if(estado.locItems) { locItems=estado.locItems; _locSeq=locItems.length+1; }
   if(estado.albItems) { albItems=estado.albItems; _albSeq=albItems.length+1; }
+
+  // Renderizar todo junto
+  renderAportes();
   if(estado.locItems||estado.albItems) renderAlquileres();
   if(estado.invItems) { invItems=estado.invItems; _invSeq=invItems.length+1; renderInv(); }
-  updateAll();
+
+  // Setear DOM inputs DESPUÉS de renderizar, en un solo timeout
+  setTimeout(() => {
+    aportesData.forEach(r => {
+      const inp=$(r.id); if(inp) inp.value = r.val || 0;
+      const disp=$(r.id+'-disp'); if(disp) disp.textContent = fmt(r.val || 0);
+      // también restaurar displays de meta
+      const m = estado._rowMeta ? estado._rowMeta[r.id] : null;
+      if(m) {
+        const ld=$(r.id+'-label-disp'); if(ld) ld.textContent=m.label;
+        const cd=$(r.id+'-cod-disp');   if(cd) cd.textContent=m.cod;
+        const rd=$(r.id+'-ref-disp');   if(rd) rd.textContent=fmt(m.ref);
+        const li=$(r.id+'-label');      if(li) li.value=m.label;
+        const ci=$(r.id+'-cod');        if(ci) ci.value=m.cod;
+        const ri=$(r.id+'-ref');        if(ri) ri.value=m.ref;
+      }
+    });
+    updateAll();
+  }, 80);
 }
 
 // ─── EXPORT CSV ───
