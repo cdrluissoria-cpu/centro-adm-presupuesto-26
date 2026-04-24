@@ -22,14 +22,18 @@
   const app = initializeApp(firebaseConfig, "centro-adm");
   const db  = getFirestore(app);
   const DOC = doc(db, "presupuesto-centro-adm", "2026");
-
   const MY_TAB = Math.random().toString(36).slice(2);
+
+  // Timestamp of last local save
+  let _lastSaveTs = 0;
+  let _firstLoad = true;
 
   // ── GUARDAR ──
   window._fbSave = async (estado) => {
     try {
-      await setDoc(DOC, { ...estado, _tab: MY_TAB, _reload: false });
-      // Confirmar guardado en el propio tab
+      const ts = Date.now();
+      _lastSaveTs = ts;
+      await setDoc(DOC, { ...estado, _tab: MY_TAB, _ts: ts });
       if (typeof setSyncStatus === 'function') setSyncStatus('live');
     } catch(e) {
       console.error("Firebase save error:", e);
@@ -37,40 +41,35 @@
     }
   };
 
-  // ── FORZAR RECARGA EN TODOS LOS DISPOSITIVOS ──
   window._fbForceSync = async () => {
     if (!window._fbSave) return;
     const estado = window._capturarEstado ? window._capturarEstado() : {};
-    await setDoc(DOC, { ...estado, _tab: MY_TAB, _reload: true });
+    await window._fbSave(estado);
   };
 
   // ── LISTENER ──
-  let _firstLoad = true;
   onSnapshot(DOC, snap => {
     if (!snap.exists()) return;
     const data = snap.data();
     if (!data) return;
 
+    // Ignore own saves
     if (data._tab === MY_TAB) {
       if (typeof setSyncStatus === "function") setSyncStatus("live");
       return;
     }
 
-    if (data._reload === true && !_firstLoad) {
-      setTimeout(() => location.reload(), 300);
-      return;
-    }
-
+    // First load: always apply
     if (_firstLoad) {
       _firstLoad = false;
       setTimeout(() => {
-        if (typeof aplicarEstado === "function" && !window._userEditing) {
+        if (typeof aplicarEstado === "function") {
           window._applying = true;
           aplicarEstado(data);
           setTimeout(() => {
             window._applying = false;
             if (typeof setSyncStatus === "function") setSyncStatus("live");
-          }, 1200);
+          }, 500);
         }
         window._appReady = true;
         if (typeof setSyncStatus === "function") setSyncStatus("live");
@@ -78,16 +77,32 @@
       return;
     }
 
-    if (!window._appReady || window._applying || window._userEditing) return;
+    // Remote change: only apply if we haven't saved recently (within 10 seconds)
+    const remoteTs = data._ts || 0;
+    const timeSinceOurSave = Date.now() - _lastSaveTs;
+    
+    if (timeSinceOurSave < 10000) {
+      // We saved recently — ignore remote, our version is newer
+      console.log("Ignoring remote update — our save is newer");
+      return;
+    }
+
+    if (window._userEditing) {
+      console.log("Ignoring remote update — user is editing");
+      return;
+    }
+
+    if (!window._appReady || window._applying) return;
+
     window._applying = true;
     if (typeof aplicarEstado === "function") aplicarEstado(data);
     setTimeout(() => {
       window._applying = false;
       if (typeof setSyncStatus === "function") setSyncStatus("live");
-    }, 1200);
+    }, 500);
 
   }, err => {
-    if (typeof setSyncStatus === "function") setSyncStatus("error");
+    if (typeof setSyncStatus === 'function') setSyncStatus('error');
   });
 </script>
 <style>
