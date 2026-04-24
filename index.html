@@ -1699,6 +1699,7 @@ function addInv() {
 function delInv(id) {
   invItems = invItems.filter(x=>x.id!==id);
   renderInv();
+  _loadPreset();
   updateAll();
 }
 function renderInv() {
@@ -2124,6 +2125,39 @@ function exportarCSV() {
   a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
   a.download = 'presupuesto_centroadm_2026.csv';
   a.click();
+}
+
+
+// ─── PRESET 2026 (valores iniciales del presupuesto) ───
+const _PRESET_2026 = {
+  "pe-sue":245621591,"pe-cc":57928643,"pe-hab":4575653,"pe-indem":1511814,
+  "pe-cap":182612,"pe-uni":1276132,"pe-otros":25859072,"pe-hnas":71862983,
+  "sv-hon":68470163,"sv-seg":3890010,"sv-lag":19976132,"sv-tel":5202466,
+  "sv-red":65589397,"sv-rmb":126604,"sv-rmq":1313775,"sv-rau":5453491,
+  "sv-lim":11535477,"sv-imp":437597,"sv-com":2550645,"sv-sec":7519131,"sv-sep":2923181,
+  "ad-lib":11729581,"ad-it":33609056,"ad-pre":3818249,"ad-sus":42607541,
+  "ad-via":138622884,"ad-mov":79122682,"ad-ban":6718071,"ad-dif":14354,
+  "ad-don":252200,"ad-per":8430,"co-est":4806420,"co-med":1292525,
+  "oe-baz":988610,"oe-cul":59015,"oe-jui":82807037,"oe-sin":5501569,
+  "ef-dif":1178328,"ef-desc":77214,"ef-int":331408,
+  "acl-csr":306198791,"acl-cla":29000000,"acl-crr":110000000,"acl-cst":1000000,
+  "aco-ccm":91531490,"aco-csf":11681577,"aco-rita":15652408,"aco-ang":7884068,
+  "aco-ines":4492000,"aco-flap":1731250,"aco-fros":3165000,"aco-fcha":1545592,
+  "aco-flas":1300000,"aco-fcm":4673250,
+  "ro-reint":13635006,"ro-jub":4380297,"ro-sue":21398984,
+  "fi-int":147497871,"fi-dif":8039368,"fi-desc":65948,
+  "ex-sob":0,"ex-don":57508412,
+  "alq-mus":150000,"alq-vbu":450805400
+};
+function _loadPreset() {
+  if (window._appReady) return; // Firebase already loaded — don't overwrite
+  Object.entries(_PRESET_2026).forEach(([id, val]) => {
+    const inp = document.getElementById(id);
+    if (!inp) return;
+    inp.value = val;
+    const disp = document.getElementById(id + '-disp');
+    if (disp) disp.textContent = fmt(val);
+  });
 }
 
 // ─── INIT ───
