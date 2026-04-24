@@ -1945,7 +1945,11 @@ function capturarEstado() {
     const inp = $(r.id); if(inp) r.val = parseFloat(inp.value)||0;
     vals[r.id] = r.val || 0;
   });
-  vals._aportesData = aportesData.map(r => ({id:r.id, cod:r.cod, label:r.label, ref:r.ref, val:r.val||0, type:r.type||null, sub:r.sub||null}));
+  vals._aportesData = aportesData.map(r => ({
+    id:r.id, cod:r.cod, label:r.label, ref:r.ref, val:r.val||0,
+    type:r.type||null,
+    sub: r.sub ? r.sub.map(s=>({...s})) : null
+  }));
   vals._rowMeta = {};
   allRows().forEach(r => {
     vals._rowMeta[r.id] = {label: r.label, cod: r.cod, ref: r.ref};
@@ -2000,6 +2004,10 @@ function aplicarEstado(estado) {
   if(estado.notas && $('notas')) $('notas').textContent=estado.notas;
   // Restore aportesData — deduplicate, restore val from estado
   if(estado._aportesData && estado._aportesData.length) {
+    // Build lookup of original defaults to preserve type/sub
+    const _defaults = {};
+    aportesData.forEach(r => { _defaults[r.id] = r; });
+
     aportesData.length = 0;
     const seen = new Set();
     estado._aportesData.forEach(r => {
@@ -2011,7 +2019,11 @@ function aplicarEstado(estado) {
       // val: prefer _aportesData.val, then top-level key, then ref
       const val = (r.val !== undefined && r.val !== 0) ? r.val
                 : (estado[r.id] !== undefined ? estado[r.id] : (r.ref || 0));
-      aportesData.push({...r, id: uid, val});
+      // Preserve type and sub from defaults, or from saved data
+      const def = _defaults[r.id] || {};
+      const type = r.type || def.type || null;
+      const sub  = r.sub  || (def.sub ? JSON.parse(JSON.stringify(def.sub)) : null);
+      aportesData.push({...r, id: uid, val, type, sub});
     });
   }
 
