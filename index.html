@@ -64,7 +64,7 @@
     if (_firstLoad) {
       _firstLoad = false;
       setTimeout(() => {
-        if (typeof aplicarEstado === "function") {
+        if (typeof aplicarEstado === "function" && !window._userEditing) {
           window._applying = true;
           aplicarEstado(data);
           setTimeout(() => {
@@ -1096,7 +1096,13 @@ function clearPct(id) {
   const p=$(id+'-pct'); if(p) p.value='';
 }
 
-function rowVal(id) { return parseFloat($(id)?.value||0)||0; }
+function rowVal(id) {
+  const el = $(id);
+  if (el) return parseFloat(el.value) || 0;
+  // Fallback to cached value
+  const r = allRows().find(x => x.id === id);
+  return r?._lastVal || 0;
+}
 function rowRef(id) { return allRows().find(x=>x.id===id)?.ref||0; }
 
 // ─── DATOS ───
@@ -1830,12 +1836,16 @@ function updateResumen() {
     clearTimeout(window._editTimer);
     window._saveTimer = setTimeout(async () => {
       setSyncStatus('saving');
+      // Force sync all DOM values into data objects before capturing
+      allRows().forEach(r => {
+        const el = document.getElementById(r.id);
+        if (el) r._lastVal = parseFloat(el.value) || 0;
+      });
       const estado = capturarEstado();
       await window._fbSave(estado);
       setSyncStatus('live');
-      // Release editing lock after save confirmed
-      window._editTimer = setTimeout(() => { window._userEditing = false; }, 2000);
-    }, 2500);
+      window._editTimer = setTimeout(() => { window._userEditing = false; }, 3000);
+    }, 3000);
   }
 
   return {totIng, totEgr, resultado};
@@ -1986,6 +1996,7 @@ function cargarEstado(event) {
   reader.readAsText(file);
 }
 function aplicarEstado(estado) {
+  if (window._userEditing) return; // Never overwrite while user is editing
   allRows().forEach(r => {
     if(estado[r.id] !== undefined) {
       const i=$(r.id); if(i) i.value=estado[r.id];
