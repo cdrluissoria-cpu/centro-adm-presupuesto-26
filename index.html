@@ -78,7 +78,7 @@
       return;
     }
 
-    if (!window._appReady || window._applying) return;
+    if (!window._appReady || window._applying || window._userEditing) return;
     window._applying = true;
     if (typeof aplicarEstado === "function") aplicarEstado(data);
     setTimeout(() => {
@@ -1079,6 +1079,7 @@ function cerrarCell(id) {
   if(!d||!i) return;
   d.textContent = fmt(parseFloat(i.value)||0);
   i.style.display='none'; d.style.display='inline-block';
+  window._userEditing = true;
   updateAll();
 }
 function aplicarPct(id) {
@@ -1108,11 +1109,11 @@ let aportesData = [
   {id:'ap-crrj',     cod:'412010', label:'Col. Ssmo. Rosario (R)',       ref:84930338,  val:95160785},
   {id:'ap-x100',     cod:'412012', label:'Col. Sta. Teresita',           ref:0,         val:8674951},
   {id:'ap-x100_w5mu',cod:'412011', label:'Col. Elmina Paz Gallo',        ref:0,         val:25791574},
-  {id:'ap-ccm',      cod:'412014', label:'Comunidad Casa Madre',         ref:14471555,  val:14471555,  type:'com', sub:[{label:'Excedente 2025',val:0},{label:'Anticipos mensuales 2026',val:0,meses:12}]},
-  {id:'ap-cepg',     cod:'412015', label:'Comunidad Elmina Paz Gallo',   ref:28143732,  val:28143732,  type:'com', sub:[{label:'Excedente 2025',val:0},{label:'Anticipos mensuales 2026',val:0,meses:12}]},
-  {id:'ap-lasun',    cod:'412016', label:'Comunidad La Asunción',        ref:21174478,  val:21174478,  type:'com', sub:[{label:'Excedente 2025',val:0},{label:'Anticipos mensuales 2026',val:0,meses:12}]},
-  {id:'ap-cros',     cod:'412017', label:'Comunidad Ssmo. Rosario (R)',  ref:12769570,  val:12769570,  type:'com', sub:[{label:'Excedente 2025',val:0},{label:'Anticipos mensuales 2026',val:0,meses:12}]},
-  {id:'ap-x100_72u8',cod:'412019', label:'Comunidad Santa Fe.',          ref:0,         val:8674951,   type:'com', sub:[{label:'Excedente 2025',val:0},{label:'Anticipos mensuales 2026',val:0,meses:12}]},
+  {id:'ap-ccm',      cod:'412014', label:'Comunidad Casa Madre',         ref:14471555,  val:76481422,  type:'com', sub:[{label:'Excedente 2025',val:71897258},{label:'Anticipos mensuales 2026',val:382014,meses:12}]},
+  {id:'ap-cepg',     cod:'412015', label:'Comunidad Elmina Paz Gallo',   ref:28143732,  val:29849177,  type:'com', sub:[{label:'Excedente 2025',val:26035277},{label:'Anticipos mensuales 2026',val:317825,meses:12}]},
+  {id:'ap-lasun',    cod:'412016', label:'Comunidad La Asunción',        ref:21174478,  val:55377933,  type:'com', sub:[{label:'Excedente 2025',val:52862286},{label:'Anticipos mensuales 2026',val:209637,meses:12}]},
+  {id:'ap-cros',     cod:'412017', label:'Comunidad Ssmo. Rosario (R)',  ref:12769570,  val:2792000,   type:'com', sub:[{label:'Excedente 2025',val:0},{label:'Anticipos mensuales 2026',val:232667,meses:12}]},
+  {id:'ap-x100_72u8',cod:'412019', label:'Comunidad Santa Fe.',          ref:0,         val:6970567,   type:'com', sub:[{label:'Excedente 2025',val:4768858},{label:'Anticipos mensuales 2026',val:183476,meses:12}]},
 ];
 let _apSeq = 100; // secuencia para nuevas filas
 
@@ -1250,9 +1251,7 @@ function recalcCom(id, i) {
   r.val = total;
   const totEl=$(id+'-tot'); if(totEl) totEl.textContent=fmt(total);
   const subTotEl=$(id+'-sub-tot'); if(subTotEl) subTotEl.textContent=fmt(total);
-  // update var
-  const diff = total - r.ref;
-  const pct = r.ref ? ((diff/r.ref)*100).toFixed(0)+'%' : '—';
+  window._userEditing = true;
   updateAll();
 }
 
@@ -1559,61 +1558,61 @@ const extrData = [
 ];
 
 const personalData = [
-  {id:'pe-sue',   cod:'511001', label:'Sueldos',                          ref:194783181},
-  {id:'pe-cc',    cod:'511002', label:'Cargas Sociales',                  ref:45938654},
-  {id:'pe-hab',   cod:'511003', label:'Haberes Sin Aportes',              ref:3628591},
-  {id:'pe-indem', cod:'511005', label:'Indemnización',                    ref:1198901},
-  {id:'pe-cap',   cod:'511006', label:'Capacitación',                     ref:144815},
-  {id:'pe-uni',   cod:'511007', label:'Uniformes / Ropa de Trabajo',      ref:1012000},
-  {id:'pe-otros', cod:'511008', label:'Otros Gastos en Personal',         ref:20506798},
-  {id:'pe-hnas',  cod:'511009', label:'Comunidad Hermanas',               ref:56988884},
+  {id:'pe-sue',   cod:'511001', label:'Sueldos',                          ref:245621591},
+  {id:'pe-cc',    cod:'511002', label:'Cargas Sociales',                  ref:57928643},
+  {id:'pe-hab',   cod:'511003', label:'Haberes Sin Aportes',              ref:4575653},
+  {id:'pe-indem', cod:'511005', label:'Indemnización',                    ref:1511814},
+  {id:'pe-cap',   cod:'511006', label:'Capacitación',                     ref:182612},
+  {id:'pe-uni',   cod:'511007', label:'Uniformes / Ropa de Trabajo',      ref:1276132},
+  {id:'pe-otros', cod:'511008', label:'Otros Gastos en Personal',         ref:25859072},
+  {id:'pe-hnas',  cod:'511009', label:'Comunidad Hermanas',               ref:71862983},
 ];
 
 const serviciosData = [
-  {id:'sv-hon',   cod:'512001', label:'Honorarios',                       ref:54298305},
-  {id:'sv-seg',   cod:'512002', label:'Seguros',                          ref:3084861},
-  {id:'sv-lag',   cod:'512003', label:'Luz, Agua, Gas',                   ref:15841500},
-  {id:'sv-tel',   cod:'512004', label:'Teléfono y Comunicaciones',        ref:4125667},
-  {id:'sv-red',   cod:'512005', label:'Repar. y Conserv. Edificios',      ref:52013796},
-  {id:'sv-rmb',   cod:'512006', label:'Repar. y Conserv. Muebles',        ref:100400},
-  {id:'sv-rmq',   cod:'512007', label:'Repar. y Conserv. Maquinarias',    ref:1041852},
-  {id:'sv-rau',   cod:'512008', label:'Repar. y Conserv. Automotores',    ref:4324735},
-  {id:'sv-lim',   cod:'512009', label:'Servicios y Art. de Limpieza',     ref:9147880},
-  {id:'sv-imp',   cod:'512010', label:'Impuestos y Tasas',                ref:347024},
-  {id:'sv-com',   cod:'512011', label:'Comisiones',                       ref:2022716},
-  {id:'sv-sec',   cod:'512012', label:'Seguridad y Emergencias Médicas',  ref:5962832},
-  {id:'sv-sep',   cod:'512013', label:'Gastos Sepelio y Cementerio',      ref:2318145},
+  {id:'sv-hon',   cod:'512001', label:'Honorarios',                       ref:68470163},
+  {id:'sv-seg',   cod:'512002', label:'Seguros',                          ref:3890010},
+  {id:'sv-lag',   cod:'512003', label:'Luz, Agua, Gas',                   ref:19976132},
+  {id:'sv-tel',   cod:'512004', label:'Teléfono y Comunicaciones',        ref:5202466},
+  {id:'sv-red',   cod:'512005', label:'Repar. y Conserv. Edificios',      ref:65589397},
+  {id:'sv-rmb',   cod:'512006', label:'Repar. y Conserv. Muebles',        ref:126604},
+  {id:'sv-rmq',   cod:'512007', label:'Repar. y Conserv. Maquinarias',    ref:1313775},
+  {id:'sv-rau',   cod:'512008', label:'Repar. y Conserv. Automotores',    ref:5453491},
+  {id:'sv-lim',   cod:'512009', label:'Servicios y Art. de Limpieza',     ref:11535477},
+  {id:'sv-imp',   cod:'512010', label:'Impuestos y Tasas',                ref:437597},
+  {id:'sv-com',   cod:'512011', label:'Comisiones',                       ref:2550645},
+  {id:'sv-sec',   cod:'512012', label:'Seguridad y Emergencias Médicas',  ref:7519131},
+  {id:'sv-sep',   cod:'512013', label:'Gastos Sepelio y Cementerio',      ref:2923181},
 ];
 
 const admData = [
-  {id:'ad-lib',   cod:'513001', label:'Librería e Impresiones',           ref:9301809},
-  {id:'ad-it',    cod:'513002', label:'Informática',                      ref:26652701},
-  {id:'ad-pre',   cod:'513003', label:'Prensa y Difusión',               ref:3027953},
-  {id:'ad-sus',   cod:'513004', label:'Suscripciones',                    ref:33788692},
-  {id:'ad-via',   cod:'513005', label:'Viáticos, Agasajos y Regalos',    ref:109930915},
-  {id:'ad-mov',   cod:'513007', label:'Movilidad y Combustible',          ref:62745981},
-  {id:'ad-ban',   cod:'513009', label:'Gastos Bancarios',                 ref:5248258},
-  {id:'ad-dif',   cod:'513011', label:'Diferencias de Caja',              ref:11383},
-  {id:'ad-don',   cod:'513014', label:'Donación Egreso',                  ref:200000},
-  {id:'ad-per',   cod:'513015', label:'Percepción ARCA RG 3378/9',        ref:6685},
+  {id:'ad-lib',   cod:'513001', label:'Librería e Impresiones',           ref:11729581},
+  {id:'ad-it',    cod:'513002', label:'Informática',                      ref:33609056},
+  {id:'ad-pre',   cod:'513003', label:'Prensa y Difusión',               ref:3818249},
+  {id:'ad-sus',   cod:'513004', label:'Suscripciones',                    ref:42607541},
+  {id:'ad-via',   cod:'513005', label:'Viáticos, Agasajos y Regalos',    ref:138622884},
+  {id:'ad-mov',   cod:'513007', label:'Movilidad y Combustible',          ref:79122682},
+  {id:'ad-ban',   cod:'513009', label:'Gastos Bancarios',                 ref:6718071},
+  {id:'ad-dif',   cod:'513011', label:'Diferencias de Caja',              ref:14354},
+  {id:'ad-don',   cod:'513014', label:'Donación Egreso',                  ref:252200},
+  {id:'ad-per',   cod:'513015', label:'Percepción ARCA RG 3378/9',        ref:8430},
 ];
 
 const comData = [
-  {id:'co-est',   cod:'515003', label:'Estudio y Actualización',          ref:3811594},
-  {id:'co-med',   cod:'515005', label:'Médico y Farmacia',               ref:1025000},
+  {id:'co-est',   cod:'515003', label:'Estudio y Actualización',          ref:4806420},
+  {id:'co-med',   cod:'515005', label:'Médico y Farmacia',               ref:1292525},
 ];
 
 const otrosEgrData = [
-  {id:'oe-baz',   cod:'516003', label:'Bazar y Utensillos',               ref:783989},
-  {id:'oe-cul',   cod:'516004', label:'Culto',                            ref:46800},
-  {id:'oe-jui',   cod:'516006', label:'Juicios Perdidos',                 ref:65667753},
-  {id:'oe-sin',   cod:'516008', label:'Pérdida por Siniestro',            ref:4362862},
+  {id:'oe-baz',   cod:'516003', label:'Bazar y Utensillos',               ref:988610},
+  {id:'oe-cul',   cod:'516004', label:'Culto',                            ref:59015},
+  {id:'oe-jui',   cod:'516006', label:'Juicios Perdidos',                 ref:82807037},
+  {id:'oe-sin',   cod:'516008', label:'Pérdida por Siniestro',            ref:5501569},
 ];
 
 const egrFinData = [
-  {id:'ef-dif',   cod:'519302', label:'Diferencias de Cotizaciones',      ref:934439},
-  {id:'ef-desc',  cod:'519303', label:'Descuentos Otorgados',             ref:61232},
-  {id:'ef-int',   cod:'519304', label:'Intereses Moratorios y Multas',    ref:262814},
+  {id:'ef-dif',   cod:'519302', label:'Diferencias de Cotizaciones',      ref:1178328},
+  {id:'ef-desc',  cod:'519303', label:'Descuentos Otorgados',             ref:77214},
+  {id:'ef-int',   cod:'519304', label:'Intereses Moratorios y Multas',    ref:331408},
 ];
 
 const apColData = [
@@ -1826,13 +1825,17 @@ function updateResumen() {
 
   // Auto-save to Firebase
   if (window._appReady && !window._applying && window._fbSave) {
+    window._userEditing = true;
     clearTimeout(window._saveTimer);
+    clearTimeout(window._editTimer);
     window._saveTimer = setTimeout(async () => {
       setSyncStatus('saving');
       const estado = capturarEstado();
       await window._fbSave(estado);
       setSyncStatus('live');
-    }, 1500);
+      // Release editing lock after save confirmed
+      window._editTimer = setTimeout(() => { window._userEditing = false; }, 2000);
+    }, 2500);
   }
 
   return {totIng, totEgr, resultado};
