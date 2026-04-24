@@ -925,11 +925,17 @@ function setSyncStatus(state) {
 }
 
 async function forzarSincronizacion() {
-  if(window._fbForceSync) {
-    setSyncStatus('saving');
-    await window._fbForceSync();
-    setSyncStatus('live');
-  }
+  if(!window._fbSave) return;
+  setSyncStatus('saving');
+  // Force read all DOM values first
+  allRows().forEach(r => {
+    const el = document.getElementById(r.id);
+    if (el) r._lastVal = parseFloat(el.value) || 0;
+  });
+  const estado = capturarEstado();
+  await window._fbSave(estado);
+  setSyncStatus('live');
+  alert('✅ Guardado correctamente en la nube.');
 }
 
 // ─── NAV ───
@@ -2015,8 +2021,13 @@ function aplicarEstado(estado) {
   if (window._userEditing) return; // Never overwrite while user is editing
   allRows().forEach(r => {
     if(estado[r.id] !== undefined) {
-      const i=$(r.id); if(i) i.value=estado[r.id];
-      const d=$(r.id+'-disp'); if(d) d.textContent=fmt(estado[r.id]);
+      // Use Firebase value, but fall back to preset if Firebase sends 0 and preset has value
+      let v = estado[r.id];
+      if ((v === 0 || v === undefined) && _PRESET_2026[r.id]) {
+        v = _PRESET_2026[r.id];
+      }
+      const i=$(r.id); if(i) i.value=v;
+      const d=$(r.id+'-disp'); if(d) d.textContent=fmt(v);
     }
   });
   acFields.forEach(f => {
@@ -2149,6 +2160,7 @@ const _PRESET_2026 = {
   "ex-sob":0,"ex-don":57508412,
   "alq-mus":150000,"alq-vbu":450805400
 };
+
 function _loadPreset() {
   if (window._appReady) return; // Firebase already loaded — don't overwrite
   Object.entries(_PRESET_2026).forEach(([id, val]) => {
