@@ -935,7 +935,6 @@ async function forzarSincronizacion() {
   const estado = capturarEstado();
   await window._fbSave(estado);
   setSyncStatus('live');
-  alert('✅ Guardado correctamente en la nube.');
 }
 
 // ─── NAV ───
@@ -1017,8 +1016,8 @@ function calcInicio() {
 
 // ─── TABLA GENÉRICA (ingresos/egresos) ───
 function makeRow(r) {
-  // r = {id, cod, label, ref}
-  const pres = r.ref;
+  // r = {id, cod, label, ref, val}
+  const pres = (r.val !== undefined) ? r.val : r.ref;
   return `<tr id="row-${r.id}">
     <td class="muted" style="font-size:10.5px;white-space:nowrap">
       <span id="${r.id}-cod-disp" style="cursor:text" onclick="editRowMeta('${r.id}','cod')" title="Clic para editar código">${r.cod}</span>
@@ -1098,8 +1097,12 @@ function editCell(id) {
 function cerrarCell(id) {
   const d=$(id+'-disp'), i=$(id);
   if(!d||!i) return;
-  d.textContent = fmt(parseFloat(i.value)||0);
+  const v = parseFloat(i.value)||0;
+  d.textContent = fmt(v);
   i.style.display='none'; d.style.display='inline-block';
+  // Sync back to data object
+  const r = allRows().find(x=>x.id===id);
+  if(r) r.val = v;
   window._userEditing = true;
   updateAll();
 }
@@ -1562,104 +1565,104 @@ function calcAlqLoc() { calcExpandable('loc'); calcExpandable('alb'); }
 
 // alquileresDataResto: solo Museo y Venta (loc y alb son expandibles)
 const alquileresDataResto = [
-  {id:'alq-mus',  cod:'414009', label:'Museo Elmina',        ref:150000},
-  {id:'alq-vbu',  cod:'414011', label:'Venta Bienes de Uso', ref:450805400},
+  {id:'alq-mus',  cod:'414009', label:'Museo Elmina',        ref:150000, val:150000},
+  {id:'alq-vbu',  cod:'414011', label:'Venta Bienes de Uso', ref:450805400, val:450805400},
 ];
 const alquileresData = alquileresDataResto; // alias para allRows()
 
 const recOrdData = [
-  {id:'ro-reint', cod:'413001', label:'Reintegro Gastos Adm. y Comisiones', ref:13635006},
-  {id:'ro-jub',   cod:'413012', label:'Jubilaciones y Pensiones',            ref:4380297},
-  {id:'ro-sue',   cod:'413013', label:'Sueldos Ingreso',                     ref:21398984},
+  {id:'ro-reint', cod:'413001', label:'Reintegro Gastos Adm. y Comisiones', ref:13635006, val:13635006},
+  {id:'ro-jub',   cod:'413012', label:'Jubilaciones y Pensiones',            ref:4380297, val:4380297},
+  {id:'ro-sue',   cod:'413013', label:'Sueldos Ingreso',                     ref:21398984, val:21398984},
 ];
 
 const finIngData = [
-  {id:'fi-int',   cod:'415001', label:'Intereses y Rendimiento de Inversiones', ref:147497871},
-  {id:'fi-dif',   cod:'415003', label:'Diferencias de Cotizaciones',             ref:8039368},
-  {id:'fi-desc',  cod:'415004', label:'Descuentos Obtenidos',                    ref:65948},
+  {id:'fi-int',   cod:'415001', label:'Intereses y Rendimiento de Inversiones', ref:147497871, val:147497871},
+  {id:'fi-dif',   cod:'415003', label:'Diferencias de Cotizaciones',             ref:8039368, val:8039368},
+  {id:'fi-desc',  cod:'415004', label:'Descuentos Obtenidos',                    ref:65948, val:65948},
 ];
 
 const extrData = [
-  {id:'ex-sob',   cod:'421001', label:'Sobrante de Caja',                ref:455452},
-  {id:'ex-don',   cod:'421002', label:'Donaciones',                       ref:57508412},
+  {id:'ex-sob',   cod:'421001', label:'Sobrante de Caja',                ref:455452, val:0},
+  {id:'ex-don',   cod:'421002', label:'Donaciones',                       ref:57508412, val:57508412},
 ];
 
 const personalData = [
-  {id:'pe-sue',   cod:'511001', label:'Sueldos',                          ref:194783181},
-  {id:'pe-cc',    cod:'511002', label:'Cargas Sociales',                  ref:45938654},
-  {id:'pe-hab',   cod:'511003', label:'Haberes Sin Aportes',              ref:3628591},
-  {id:'pe-indem', cod:'511005', label:'Indemnización',                    ref:1198901},
-  {id:'pe-cap',   cod:'511006', label:'Capacitación',                     ref:144815},
-  {id:'pe-uni',   cod:'511007', label:'Uniformes / Ropa de Trabajo',      ref:1012000},
-  {id:'pe-otros', cod:'511008', label:'Otros Gastos en Personal',         ref:20506798},
-  {id:'pe-hnas',  cod:'511009', label:'Comunidad Hermanas',               ref:56988884},
+  {id:'pe-sue',   cod:'511001', label:'Sueldos',                          ref:194783181, val:198678845},
+  {id:'pe-cc',    cod:'511002', label:'Cargas Sociales',                  ref:45938654, val:57928643},
+  {id:'pe-hab',   cod:'511003', label:'Haberes Sin Aportes',              ref:3628591, val:4575653},
+  {id:'pe-indem', cod:'511005', label:'Indemnización',                    ref:1198901, val:1511814},
+  {id:'pe-cap',   cod:'511006', label:'Capacitación',                     ref:144815, val:182612},
+  {id:'pe-uni',   cod:'511007', label:'Uniformes / Ropa de Trabajo',      ref:1012000, val:1276132},
+  {id:'pe-otros', cod:'511008', label:'Otros Gastos en Personal',         ref:20506798, val:25859072},
+  {id:'pe-hnas',  cod:'511009', label:'Comunidad Hermanas',               ref:56988884, val:71862983},
 ];
 
 const serviciosData = [
-  {id:'sv-hon',   cod:'512001', label:'Honorarios',                       ref:54298305},
-  {id:'sv-seg',   cod:'512002', label:'Seguros',                          ref:3084861},
-  {id:'sv-lag',   cod:'512003', label:'Luz, Agua, Gas',                   ref:15841500},
-  {id:'sv-tel',   cod:'512004', label:'Teléfono y Comunicaciones',        ref:4125667},
-  {id:'sv-red',   cod:'512005', label:'Repar. y Conserv. Edificios',      ref:52013796},
-  {id:'sv-rmb',   cod:'512006', label:'Repar. y Conserv. Muebles',        ref:100400},
-  {id:'sv-rmq',   cod:'512007', label:'Repar. y Conserv. Maquinarias',    ref:1041852},
-  {id:'sv-rau',   cod:'512008', label:'Repar. y Conserv. Automotores',    ref:4324735},
-  {id:'sv-lim',   cod:'512009', label:'Servicios y Art. de Limpieza',     ref:9147880},
-  {id:'sv-imp',   cod:'512010', label:'Impuestos y Tasas',                ref:347024},
-  {id:'sv-com',   cod:'512011', label:'Comisiones',                       ref:2022716},
-  {id:'sv-sec',   cod:'512012', label:'Seguridad y Emergencias Médicas',  ref:5962832},
-  {id:'sv-sep',   cod:'512013', label:'Gastos Sepelio y Cementerio',      ref:2318145},
+  {id:'sv-hon',   cod:'512001', label:'Honorarios',                       ref:54298305, val:68470163},
+  {id:'sv-seg',   cod:'512002', label:'Seguros',                          ref:3084861, val:3890010},
+  {id:'sv-lag',   cod:'512003', label:'Luz, Agua, Gas',                   ref:15841500, val:19976132},
+  {id:'sv-tel',   cod:'512004', label:'Teléfono y Comunicaciones',        ref:4125667, val:5202466},
+  {id:'sv-red',   cod:'512005', label:'Repar. y Conserv. Edificios',      ref:52013796, val:65589397},
+  {id:'sv-rmb',   cod:'512006', label:'Repar. y Conserv. Muebles',        ref:100400, val:126604},
+  {id:'sv-rmq',   cod:'512007', label:'Repar. y Conserv. Maquinarias',    ref:1041852, val:1313775},
+  {id:'sv-rau',   cod:'512008', label:'Repar. y Conserv. Automotores',    ref:4324735, val:5453491},
+  {id:'sv-lim',   cod:'512009', label:'Servicios y Art. de Limpieza',     ref:9147880, val:11535477},
+  {id:'sv-imp',   cod:'512010', label:'Impuestos y Tasas',                ref:347024, val:437597},
+  {id:'sv-com',   cod:'512011', label:'Comisiones',                       ref:2022716, val:2550645},
+  {id:'sv-sec',   cod:'512012', label:'Seguridad y Emergencias Médicas',  ref:5962832, val:7519131},
+  {id:'sv-sep',   cod:'512013', label:'Gastos Sepelio y Cementerio',      ref:2318145, val:2923181},
 ];
 
 const admData = [
-  {id:'ad-lib',   cod:'513001', label:'Librería e Impresiones',           ref:9301809},
-  {id:'ad-it',    cod:'513002', label:'Informática',                      ref:26652701},
-  {id:'ad-pre',   cod:'513003', label:'Prensa y Difusión',               ref:3027953},
-  {id:'ad-sus',   cod:'513004', label:'Suscripciones',                    ref:33788692},
-  {id:'ad-via',   cod:'513005', label:'Viáticos, Agasajos y Regalos',    ref:109930915},
-  {id:'ad-mov',   cod:'513007', label:'Movilidad y Combustible',          ref:62745981},
-  {id:'ad-ban',   cod:'513009', label:'Gastos Bancarios',                 ref:5248258},
-  {id:'ad-dif',   cod:'513011', label:'Diferencias de Caja',              ref:11383},
-  {id:'ad-don',   cod:'513014', label:'Donación Egreso',                  ref:200000},
-  {id:'ad-per',   cod:'513015', label:'Percepción ARCA RG 3378/9',        ref:6685},
+  {id:'ad-lib',   cod:'513001', label:'Librería e Impresiones',           ref:9301809, val:11729581},
+  {id:'ad-it',    cod:'513002', label:'Informática',                      ref:26652701, val:33609056},
+  {id:'ad-pre',   cod:'513003', label:'Prensa y Difusión',               ref:3027953, val:3818249},
+  {id:'ad-sus',   cod:'513004', label:'Suscripciones',                    ref:33788692, val:42607541},
+  {id:'ad-via',   cod:'513005', label:'Viáticos, Agasajos y Regalos',    ref:109930915, val:138622884},
+  {id:'ad-mov',   cod:'513007', label:'Movilidad y Combustible',          ref:62745981, val:79122682},
+  {id:'ad-ban',   cod:'513009', label:'Gastos Bancarios',                 ref:5248258, val:6718071},
+  {id:'ad-dif',   cod:'513011', label:'Diferencias de Caja',              ref:11383, val:14354},
+  {id:'ad-don',   cod:'513014', label:'Donación Egreso',                  ref:200000, val:252200},
+  {id:'ad-per',   cod:'513015', label:'Percepción ARCA RG 3378/9',        ref:6685, val:8430},
 ];
 
 const comData = [
-  {id:'co-est',   cod:'515003', label:'Estudio y Actualización',          ref:3811594},
-  {id:'co-med',   cod:'515005', label:'Médico y Farmacia',               ref:1025000},
+  {id:'co-est',   cod:'515003', label:'Estudio y Actualización',          ref:3811594, val:4806420},
+  {id:'co-med',   cod:'515005', label:'Médico y Farmacia',               ref:1025000, val:1292525},
 ];
 
 const otrosEgrData = [
-  {id:'oe-baz',   cod:'516003', label:'Bazar y Utensillos',               ref:783989},
-  {id:'oe-cul',   cod:'516004', label:'Culto',                            ref:46800},
-  {id:'oe-jui',   cod:'516006', label:'Juicios Perdidos',                 ref:65667753},
-  {id:'oe-sin',   cod:'516008', label:'Pérdida por Siniestro',            ref:4362862},
+  {id:'oe-baz',   cod:'516003', label:'Bazar y Utensillos',               ref:783989, val:988610},
+  {id:'oe-cul',   cod:'516004', label:'Culto',                            ref:46800, val:59015},
+  {id:'oe-jui',   cod:'516006', label:'Juicios Perdidos',                 ref:65667753, val:82807037},
+  {id:'oe-sin',   cod:'516008', label:'Pérdida por Siniestro',            ref:4362862, val:5501569},
 ];
 
 const egrFinData = [
-  {id:'ef-dif',   cod:'519302', label:'Diferencias de Cotizaciones',      ref:934439},
-  {id:'ef-desc',  cod:'519303', label:'Descuentos Otorgados',             ref:61232},
-  {id:'ef-int',   cod:'519304', label:'Intereses Moratorios y Multas',    ref:262814},
+  {id:'ef-dif',   cod:'519302', label:'Diferencias de Cotizaciones',      ref:934439, val:1178328},
+  {id:'ef-desc',  cod:'519303', label:'Descuentos Otorgados',             ref:61232, val:77214},
+  {id:'ef-int',   cod:'519304', label:'Intereses Moratorios y Multas',    ref:262814, val:331408},
 ];
 
 const apColData = [
-  {id:'acl-csr',  cod:'518002', label:'A Colegio Santa Rosa',             ref:306198791},
-  {id:'acl-cla',  cod:'518003', label:'A Colegio La Asunción',            ref:29000000},
-  {id:'acl-crr',  cod:'518006', label:'A Col. Ssmo. Rosario (R)',         ref:110000000},
-  {id:'acl-cst',  cod:'518008', label:'A Colegio Santa Teresita',         ref:1000000},
+  {id:'acl-csr',  cod:'518002', label:'A Colegio Santa Rosa',             ref:306198791, val:306198791},
+  {id:'acl-cla',  cod:'518003', label:'A Colegio La Asunción',            ref:29000000, val:29000000},
+  {id:'acl-crr',  cod:'518006', label:'A Col. Ssmo. Rosario (R)',         ref:110000000, val:110000000},
+  {id:'acl-cst',  cod:'518008', label:'A Colegio Santa Teresita',         ref:1000000, val:1000000},
 ];
 
 const apComData = [
-  {id:'aco-ccm',  cod:'519001', label:'A Comunidad Casa Madre',           ref:91531490},
-  {id:'aco-csf',  cod:'519005', label:'A Comunidad Santa Fe',             ref:11681577},
-  {id:'aco-rita', cod:'519101', label:'A Hna. Rita Bieler',               ref:15652408},
-  {id:'aco-ang',  cod:'519102', label:'A Hna. M. Ángela Pereyra',         ref:7884068},
-  {id:'aco-ines', cod:'519104', label:'Aporte Inés Sedan (Chichi)',        ref:4492000},
-  {id:'aco-flap', cod:'519201', label:'Fondo Solidario La Pampa',         ref:1731250},
-  {id:'aco-fros', cod:'519202', label:'Fondo Solidario Rosario',          ref:3165000},
-  {id:'aco-fcha', cod:'519203', label:'Fondo Solidario Chasquivil',       ref:1545592},
-  {id:'aco-flas', cod:'519204', label:'Fondo Solidario La Asunción',      ref:1300000},
-  {id:'aco-fcm',  cod:'519206', label:'Fondo Solidario Casa Madre',       ref:4673250},
+  {id:'aco-ccm',  cod:'519001', label:'A Comunidad Casa Madre',           ref:91531490, val:91531490},
+  {id:'aco-csf',  cod:'519005', label:'A Comunidad Santa Fe',             ref:11681577, val:11681577},
+  {id:'aco-rita', cod:'519101', label:'A Hna. Rita Bieler',               ref:15652408, val:15652408},
+  {id:'aco-ang',  cod:'519102', label:'A Hna. M. Ángela Pereyra',         ref:7884068, val:7884068},
+  {id:'aco-ines', cod:'519104', label:'Aporte Inés Sedan (Chichi)',        ref:4492000, val:4492000},
+  {id:'aco-flap', cod:'519201', label:'Fondo Solidario La Pampa',         ref:1731250, val:1731250},
+  {id:'aco-fros', cod:'519202', label:'Fondo Solidario Rosario',          ref:3165000, val:3165000},
+  {id:'aco-fcha', cod:'519203', label:'Fondo Solidario Chasquivil',       ref:1545592, val:1545592},
+  {id:'aco-flas', cod:'519204', label:'Fondo Solidario La Asunción',      ref:1300000, val:1300000},
+  {id:'aco-fcm',  cod:'519206', label:'Fondo Solidario Casa Madre',       ref:4673250, val:4673250},
 ];
 
 function allRows() {
@@ -1678,7 +1681,11 @@ function renderTable(bodyId, data) {
 }
 
 function calcSection(data) {
-  return data.reduce((s,r) => s + rowVal(r.id), 0);
+  return data.reduce((s,r) => {
+    // Prefer r.val (in-memory), fallback to DOM
+    if (r.val !== undefined) return s + r.val;
+    return s + rowVal(r.id);
+  }, 0);
 }
 
 function updateVars(data) {
@@ -1975,7 +1982,13 @@ function capturarEstado() {
   vals.notas = $('notas')?.textContent||'';
   // Save meta edits (label, cod, ref) for all rows
   // Save aportesData rows (including user-added ones)
-  // Sync DOM input values back into aportesData.val before saving
+  // Sync all rows: read DOM → update r.val → save
+  allRows().forEach(r => {
+    const inp = $(r.id);
+    if(inp) r.val = parseFloat(inp.value)||0;
+    vals[r.id] = r.val||0;
+  });
+  // Aportes
   aportesData.forEach(r => {
     const inp = $(r.id); if(inp) r.val = parseFloat(inp.value)||0;
     vals[r.id] = r.val || 0;
@@ -2021,11 +2034,10 @@ function aplicarEstado(estado) {
   if (window._userEditing) return; // Never overwrite while user is editing
   allRows().forEach(r => {
     if(estado[r.id] !== undefined) {
-      // Use Firebase value, but fall back to preset if Firebase sends 0 and preset has value
       let v = estado[r.id];
-      if ((v === 0 || v === undefined) && _PRESET_2026[r.id]) {
-        v = _PRESET_2026[r.id];
-      }
+      // Never use 0 from Firebase if we have a better preset value
+      if (!v && _PRESET_2026[r.id]) v = _PRESET_2026[r.id];
+      r.val = v; // Always update in-memory first
       const i=$(r.id); if(i) i.value=v;
       const d=$(r.id+'-disp'); if(d) d.textContent=fmt(v);
     }
