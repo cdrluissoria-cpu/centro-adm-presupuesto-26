@@ -1539,10 +1539,8 @@ function renderAlquileres() {
   </tr>`;
   html += renderDetailRows(albItems, 'alb', 'addAlb', 'delAlb', 'applyAlbItemPct');
 
-  // ── Resto ──
-  [{id:'alq-mus', cod:'414009', label:'Museo Elmina', ref:150000},
-   {id:'alq-vbu', cod:'414011', label:'Venta Bienes de Uso', ref:450805400}
-  ].forEach(r => { html += makeRow(r); });
+  // ── Resto ── usa alquileresDataResto para que cerrarCell pueda actualizar r.val
+  alquileresDataResto.forEach(r => { html += makeRow(r); });
 
   b.innerHTML = html;
   calcExpandable('loc');
