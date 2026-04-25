@@ -1564,7 +1564,7 @@ function calcAlqLoc() { calcExpandable('loc'); calcExpandable('alb'); }
 // alquileresDataResto: solo Museo y Venta (loc y alb son expandibles)
 let alquileresDataResto = [
   {id:'alq-mus',  cod:'414009', label:'Museo Elmina',        ref:150000, val:150000},
-  {id:'alq-vbu',  cod:'414011', label:'Venta Bienes de Uso', ref:450805400, val:450805400},
+  {id:'alq-vbu',  cod:'414011', label:'Venta Bienes de Uso', ref:450805400, val:0},
 ];
 const alquileresData = alquileresDataResto; // alias para allRows()
 
@@ -2108,12 +2108,11 @@ function aplicarEstado(estado) {
 
   // Restore alquileresDataResto vals
   alquileresDataResto.forEach(r => {
-    if(estado[r.id] !== undefined && estado[r.id] !== 0) {
-      r.val = estado[r.id];
-    } else if(estado[r.id] === undefined && r.val) {
-      // keep existing val
+    if(estado[r.id] !== undefined) {
+      r.val = estado[r.id]; // Trust Firebase value including 0
     }
-    // Never use 0 from Firebase — keep preset
+    const inp=$(r.id); if(inp) inp.value=r.val||0;
+    const disp=$(r.id+'-disp'); if(disp) disp.textContent=fmt(r.val||0);
   });
   if(estado.locItems) { locItems=estado.locItems; _locSeq=locItems.length+1; }
   if(estado.albItems) { albItems=estado.albItems; _albSeq=albItems.length+1; }
@@ -2242,7 +2241,7 @@ const _PRESET_2026 = {
   "ex-sob":0,
   "ex-don":57508412,
   "alq-mus":150000,
-  "alq-vbu":450805400
+  "alq-vbu":0
 };
 
 function _loadPreset() {
