@@ -1562,7 +1562,7 @@ function toggleExpandable(key) {
 function calcAlqLoc() { calcExpandable('loc'); calcExpandable('alb'); }
 
 // alquileresDataResto: solo Museo y Venta (loc y alb son expandibles)
-const alquileresDataResto = [
+let alquileresDataResto = [
   {id:'alq-mus',  cod:'414009', label:'Museo Elmina',        ref:150000, val:150000},
   {id:'alq-vbu',  cod:'414011', label:'Venta Bienes de Uso', ref:450805400, val:450805400},
 ];
@@ -1664,8 +1664,8 @@ const apComData = [
 ];
 
 function allRows() {
-  // aportesData excluded — handled separately with r.val pattern
-  return [...alquileresDataResto,...recOrdData,...finIngData,...extrData,
+  // aportesData and alquileresDataResto excluded — handled separately with r.val pattern
+  return [...recOrdData,...finIngData,...extrData,
           ...personalData,...serviciosData,...admData,...comData,...otrosEgrData,
           ...egrFinData,...apColData,...apComData];
 }
@@ -1776,7 +1776,9 @@ function updateResumen() {
   const totAp  = aportesData.reduce((s,r) => {
     const el=$(r.id); return s + (el ? (parseFloat(el.value)||0) : (r.val||0));
   }, 0);
-  const totAlq = locTotal() + albTotal() + calcSection(alquileresDataResto);
+  const totAlq = locTotal() + albTotal() + alquileresDataResto.reduce((s,r)=>{
+    const el=$(r.id); return s + (el ? (parseFloat(el.value)||0) : (r.val||0));
+  }, 0);
   const totRO  = calcSection(recOrdData);
   const totFI  = calcSection(finIngData);
   const totEx  = calcSection(extrData);
@@ -1919,7 +1921,9 @@ function updateAll() {
     }
   });
   // Alquileres: incluye locales (detalle) + resto
-  const _totAlqAll = locTotal() + albTotal() + calcSection(alquileresDataResto);
+  const _totAlqAll = locTotal() + albTotal() + alquileresDataResto.reduce((s,r)=>{
+    const el=$(r.id); return s + (el ? (parseFloat(el.value)||0) : (r.val||0));
+  }, 0);
   const _refAlqAll = 316634298 + 6327269 + alquileresDataResto.reduce((s,r)=>s+r.ref,0);
   const _alqEl=$('alquileres-total'); if(_alqEl) _alqEl.textContent=fmt(_totAlqAll);
   if($('met-alquileres')) $('met-alquileres').innerHTML=`
@@ -1927,7 +1931,17 @@ function updateAll() {
     <div class="metric"><div class="mlabel">Presupuesto 2026</div><div class="mval pos">${fmt(_totAlqAll)}</div></div>
     <div class="metric"><div class="mlabel">Variación</div><div class="mval ${_totAlqAll>_refAlqAll?'neg':'pos'}">${fmt(_totAlqAll-_refAlqAll)}</div></div>
   `;
-  updateVars(alquileresDataResto);
+  // updateVars for alquileresDataResto manually
+  alquileresDataResto.forEach(r => {
+    const v = $(r.id) ? (parseFloat($(r.id).value)||0) : (r.val||0);
+    const varEl=$(r.id+'-var');
+    if(varEl) {
+      const diff = v - r.ref;
+      const p = r.ref!==0 ? ((diff/r.ref)*100).toFixed(0) : '—';
+      varEl.textContent = (diff!==0?fmt(diff):'—') + (p!=='—'?' ('+p+'%)':'');
+      varEl.style.color = diff>0?'var(--danger)':diff<0?'var(--accent)':'var(--text3)';
+    }
+  });
   calcAlqLoc();  // solo actualiza la fila 414002, sin recursión
   updateSection(recOrdData, 'rec-ord-total', null);
   updateSection(finIngData, 'fin-ing-total', null);
@@ -2000,6 +2014,11 @@ function capturarEstado() {
   allRows().forEach(r => {
     vals._rowMeta[r.id] = {label: r.label, cod: r.cod, ref: r.ref};
   });
+  // Save alquileresDataResto vals explicitly
+  alquileresDataResto.forEach(r => {
+    const inp = $(r.id); if(inp) r.val = parseFloat(inp.value)||0;
+    vals[r.id] = r.val;
+  });
   vals.locItems = JSON.parse(JSON.stringify(locItems));
   vals.albItems = JSON.parse(JSON.stringify(albItems));
   vals.invItems = JSON.parse(JSON.stringify(invItems));
@@ -2033,9 +2052,9 @@ function aplicarEstado(estado) {
   allRows().forEach(r => {
     if(estado[r.id] !== undefined) {
       let v = estado[r.id];
-      // Never use 0 from Firebase if we have a better preset value
-      if (!v && _PRESET_2026[r.id]) v = _PRESET_2026[r.id];
-      r.val = v; // Always update in-memory first
+      // Never overwrite with 0 — keep current val or preset
+      if (!v) v = r.val || _PRESET_2026[r.id] || r.ref || 0;
+      r.val = v;
       const i=$(r.id); if(i) i.value=v;
       const d=$(r.id+'-disp'); if(d) d.textContent=fmt(v);
     }
@@ -2087,6 +2106,15 @@ function aplicarEstado(estado) {
     });
   }
 
+  // Restore alquileresDataResto vals
+  alquileresDataResto.forEach(r => {
+    if(estado[r.id] !== undefined && estado[r.id] !== 0) {
+      r.val = estado[r.id];
+    } else if(estado[r.id] === undefined && r.val) {
+      // keep existing val
+    }
+    // Never use 0 from Firebase — keep preset
+  });
   if(estado.locItems) { locItems=estado.locItems; _locSeq=locItems.length+1; }
   if(estado.albItems) { albItems=estado.albItems; _albSeq=albItems.length+1; }
 
