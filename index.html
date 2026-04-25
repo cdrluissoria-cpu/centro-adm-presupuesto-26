@@ -1101,7 +1101,7 @@ function cerrarCell(id) {
   d.textContent = fmt(v);
   i.style.display='none'; d.style.display='inline-block';
   // Sync back to data object (search all data arrays)
-  const _allDataArrays = [...allRows(), ...apColData, ...apComData, ...alquileresDataResto];
+  const _allDataArrays = [...allRows(), ...apColData, ...apComData, ...alquileresDataResto, ...aportesData];
   const r = _allDataArrays.find(x=>x.id===id);
   if(r) r.val = v;
   window._userEditing = true;
@@ -1644,14 +1644,15 @@ const egrFinData = [
   {id:'ef-int',   cod:'519304', label:'Intereses Moratorios y Multas',    ref:262814, val:331408},
 ];
 
-const apColData = [
+let apColData = [
   {id:'acl-csr',  cod:'518002', label:'A Colegio Santa Rosa',             ref:306198791, val:306198791},
   {id:'acl-cla',  cod:'518003', label:'A Colegio La Asunción',            ref:29000000, val:29000000},
   {id:'acl-crr',  cod:'518006', label:'A Col. Ssmo. Rosario (R)',         ref:110000000, val:110000000},
   {id:'acl-cst',  cod:'518008', label:'A Colegio Santa Teresita',         ref:1000000, val:1000000},
 ];
+let _aclSeq = 200;
 
-const apComData = [
+let apComData = [
   {id:'aco-ccm',  cod:'519001', label:'A Comunidad Casa Madre',           ref:91531490, val:91531490},
   {id:'aco-csf',  cod:'519005', label:'A Comunidad Santa Fe',             ref:11681577, val:11681577},
   {id:'aco-rita', cod:'519101', label:'A Hna. Rita Bieler',               ref:15652408, val:15652408},
@@ -1663,6 +1664,7 @@ const apComData = [
   {id:'aco-flas', cod:'519204', label:'Fondo Solidario La Asunción',      ref:1300000, val:1300000},
   {id:'aco-fcm',  cod:'519206', label:'Fondo Solidario Casa Madre',       ref:4673250, val:4673250},
 ];
+let _acoSeq = 300;
 
 function allRows() {
   // aportesData, alquileresDataResto, apColData, apComData excluded — handled separately
@@ -2006,7 +2008,7 @@ function capturarEstado() {
     const inp = $(r.id); if(inp) r.val = parseFloat(inp.value)||0;
     vals[r.id] = r.val || 0;
   });
-  // Save apColData and apComData explicitly
+  // Save apColData and apComData with full structure
   apColData.forEach(r => {
     const inp=$(r.id); if(inp) r.val=parseFloat(inp.value)||0;
     vals[r.id] = r.val;
@@ -2015,6 +2017,8 @@ function capturarEstado() {
     const inp=$(r.id); if(inp) r.val=parseFloat(inp.value)||0;
     vals[r.id] = r.val;
   });
+  vals._apColData = apColData.map(r=>({id:r.id,cod:r.cod,label:r.label,ref:r.ref,val:r.val||0}));
+  vals._apComData = apComData.map(r=>({id:r.id,cod:r.cod,label:r.label,ref:r.ref,val:r.val||0}));
   vals._aportesData = aportesData.map(r => ({
     id:r.id, cod:r.cod, label:r.label, ref:r.ref, val:r.val||0,
     type:r.type||null,
@@ -2124,22 +2128,35 @@ function aplicarEstado(estado) {
     const inp=$(r.id); if(inp) inp.value=r.val||0;
     const disp=$(r.id+'-disp'); if(disp) disp.textContent=fmt(r.val||0);
   });
-  // Restore apColData and apComData
-  apColData.forEach(r => {
-    if(estado[r.id] !== undefined) r.val = estado[r.id];
-    const inp=$(r.id); if(inp) inp.value=r.val||0;
-    const d=$(r.id+'-disp'); if(d) d.textContent=fmt(r.val||0);
-  });
-  apComData.forEach(r => {
-    if(estado[r.id] !== undefined) r.val = estado[r.id];
-    const inp=$(r.id); if(inp) inp.value=r.val||0;
-    const d=$(r.id+'-disp'); if(d) d.textContent=fmt(r.val||0);
-  });
+  // Restore apColData and apComData structure
+  if(estado._apColData && estado._apColData.length) {
+    apColData.length=0;
+    const seen=new Set();
+    estado._apColData.forEach(r=>{
+      let uid=r.id; if(seen.has(uid)) uid=uid+'_'+Math.random().toString(36).slice(2,5);
+      seen.add(uid);
+      apColData.push({...r,id:uid,val:estado[r.id]!==undefined?estado[r.id]:(r.val||0)});
+    });
+  } else {
+    apColData.forEach(r=>{ if(estado[r.id]!==undefined) r.val=estado[r.id]; });
+  }
+  if(estado._apComData && estado._apComData.length) {
+    apComData.length=0;
+    const seen2=new Set();
+    estado._apComData.forEach(r=>{
+      let uid=r.id; if(seen2.has(uid)) uid=uid+'_'+Math.random().toString(36).slice(2,5);
+      seen2.add(uid);
+      apComData.push({...r,id:uid,val:estado[r.id]!==undefined?estado[r.id]:(r.val||0)});
+    });
+  } else {
+    apComData.forEach(r=>{ if(estado[r.id]!==undefined) r.val=estado[r.id]; });
+  }
   if(estado.locItems) { locItems=estado.locItems; _locSeq=locItems.length+1; }
   if(estado.albItems) { albItems=estado.albItems; _albSeq=albItems.length+1; }
 
   // Renderizar todo junto
   renderAportes();
+  renderApOtorgados();
   if(estado.locItems||estado.albItems) renderAlquileres();
   if(estado.invItems) { invItems=estado.invItems; _invSeq=invItems.length+1; renderInv(); }
 
@@ -2197,6 +2214,115 @@ function exportarCSV() {
 }
 
 
+
+// ─── APORTES OTORGADOS: add/del/move ───
+function addApCol() {
+  apColData.push({id:'acl-x'+(_aclSeq++), cod:'', label:'Nueva institución', ref:0, val:0});
+  renderApOtorgados();
+  updateAll();
+}
+function delApCol(id) {
+  apColData = apColData.filter(x=>x.id!==id);
+  renderApOtorgados();
+  updateAll();
+}
+function moveApCol(id, dir) {
+  const i = apColData.findIndex(x=>x.id===id);
+  const j = i+dir;
+  if(j<0||j>=apColData.length) return;
+  [apColData[i],apColData[j]]=[apColData[j],apColData[i]];
+  renderApOtorgados();
+  updateAll();
+}
+function addApCom() {
+  apComData.push({id:'aco-x'+(_acoSeq++), cod:'', label:'Nueva cuenta', ref:0, val:0});
+  renderApOtorgados();
+  updateAll();
+}
+function delApCom(id) {
+  apComData = apComData.filter(x=>x.id!==id);
+  renderApOtorgados();
+  updateAll();
+}
+function moveApCom(id, dir) {
+  const i = apComData.findIndex(x=>x.id===id);
+  const j = i+dir;
+  if(j<0||j>=apComData.length) return;
+  [apComData[i],apComData[j]]=[apComData[j],apComData[i]];
+  renderApOtorgados();
+  updateAll();
+}
+
+function makeRowOtorg(r, i, arr, moveFn, delFn) {
+  const pres = (r.val !== undefined) ? r.val : r.ref;
+  return `<tr id="row-${r.id}">
+    <td style="font-size:10.5px;padding:4px 8px!important;white-space:nowrap">
+      <input value="${r.cod}" placeholder="Cód."
+        oninput="${arr}[${i}].cod=this.value"
+        style="width:56px;border:none;border-bottom:1px solid var(--border2);background:transparent;font-family:'DM Mono',monospace;font-size:10.5px;color:var(--text3);padding:2px 3px">
+    </td>
+    <td style="text-align:left!important">
+      <input value="${r.label}" placeholder="Descripción"
+        oninput="${arr}[${i}].label=this.value"
+        style="width:100%;min-width:180px;border:none;border-bottom:1px solid var(--border2);background:transparent;font-family:'DM Mono',monospace;font-size:12.5px;padding:2px 4px;text-align:left">
+    </td>
+    <td class="r" style="white-space:nowrap">
+      <span id="${r.id}-ref-disp" style="color:var(--text3);font-size:12px;cursor:text"
+        onclick="editRowMeta('${r.id}','ref')" title="Clic para editar referencia">${fmt(r.ref)}</span>
+      <input type="number" id="${r.id}-ref" value="${r.ref}"
+        style="display:none;width:120px;text-align:right;padding:2px 6px;border:1px solid var(--border2);border-radius:3px;font-family:'DM Mono',monospace;font-size:12px;background:var(--surface)"
+        onblur="cerrarRowMeta('${r.id}','ref')" onkeydown="if(event.key==='Enter')this.blur()">
+    </td>
+    <td class="r" style="width:80px">
+      <div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
+        <input type="number" id="${r.id}-pct" placeholder="—"
+          style="width:55px;text-align:right;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;background:var(--bg);color:var(--warn)"
+          oninput="aplicarPctOtorg('${r.id}','${arr}')">
+        <span style="font-size:10px;color:var(--text3)">%</span>
+      </div>
+    </td>
+    <td class="r">
+      <span id="${r.id}-disp" style="font-size:12.5px;font-weight:500;cursor:text" onclick="editCell('${r.id}')">${fmt(pres)}</span>
+      <input type="number" id="${r.id}" value="${pres}"
+        style="display:none;width:130px;text-align:right;padding:3px 6px;border:1px solid var(--border2);border-radius:4px;font-family:'DM Mono',monospace;font-size:12.5px"
+        onblur="cerrarCell('${r.id}')" oninput="clearPct('${r.id}');updateAll()">
+    </td>
+    <td class="r" style="white-space:nowrap">
+      <span id="${r.id}-var" style="font-size:12px;color:var(--text3)">—</span>
+      <button onclick="${moveFn}('${r.id}',-1)" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:13px;margin-left:6px">↑</button>
+      <button onclick="${moveFn}('${r.id}',1)" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:13px;margin-left:2px">↓</button>
+      <button onclick="${delFn}('${r.id}')" style="border:none;background:none;cursor:pointer;color:var(--danger);font-size:12px;margin-left:4px">✕</button>
+    </td>
+  </tr>`;
+}
+
+function aplicarPctOtorg(id, arrName) {
+  const arr = arrName==='apColData' ? apColData : apComData;
+  const r = arr.find(x=>x.id===id);
+  if(!r) return;
+  const p = parseFloat($(id+'-pct')?.value||'');
+  if(isNaN(p)) return;
+  const v = Math.round(r.ref*(1+p/100));
+  r.val = v;
+  const i=$(id); if(i) i.value=v;
+  const d=$(id+'-disp'); if(d) d.textContent=fmt(v);
+  updateAll();
+}
+
+function renderApOtorgados() {
+  const bc=$('ap-col-body');
+  if(bc) bc.innerHTML = apColData.map((r,i)=>makeRowOtorg(r,i,'apColData','moveApCol','delApCol')).join('') +
+    `<tr><td colspan="6" style="padding:6px 12px">
+      <button onclick="addApCol()" style="font-size:11px;color:var(--accent);background:none;border:1px dashed var(--accent);border-radius:4px;padding:3px 10px;cursor:pointer">+ agregar institución</button>
+    </td></tr>`;
+  const bco=$('ap-com-body');
+  if(bco) bco.innerHTML = apComData.map((r,i)=>makeRowOtorg(r,i,'apComData','moveApCom','delApCom')).join('') +
+    `<tr><td colspan="6" style="padding:6px 12px">
+      <button onclick="addApCom()" style="font-size:11px;color:var(--accent);background:none;border:1px dashed var(--accent);border-radius:4px;padding:3px 10px;cursor:pointer">+ agregar cuenta</button>
+    </td></tr>`;
+  updateVars(apColData);
+  updateVars(apComData);
+}
 // ─── PRESET 2026 (valores iniciales del presupuesto) ───
 const _PRESET_2026 = {
   "pe-sue":198678845,
@@ -2290,8 +2416,7 @@ function init() {
   renderTable('com-body', comData);
   renderTable('otros-egr-body', otrosEgrData);
   renderTable('egr-fin-body', egrFinData);
-  renderTable('ap-col-body', apColData);
-  renderTable('ap-com-body', apComData);
+  renderApOtorgados();
   renderInv();
   updateAll();
   // Si Firebase no responde en 3s, arrancar igual
