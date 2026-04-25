@@ -1100,8 +1100,9 @@ function cerrarCell(id) {
   const v = parseFloat(i.value)||0;
   d.textContent = fmt(v);
   i.style.display='none'; d.style.display='inline-block';
-  // Sync back to data object
-  const r = allRows().find(x=>x.id===id);
+  // Sync back to data object (search all data arrays)
+  const _allDataArrays = [...allRows(), ...apColData, ...apComData, ...alquileresDataResto];
+  const r = _allDataArrays.find(x=>x.id===id);
   if(r) r.val = v;
   window._userEditing = true;
   updateAll();
@@ -1664,10 +1665,10 @@ const apComData = [
 ];
 
 function allRows() {
-  // aportesData and alquileresDataResto excluded — handled separately with r.val pattern
+  // aportesData, alquileresDataResto, apColData, apComData excluded — handled separately
   return [...recOrdData,...finIngData,...extrData,
           ...personalData,...serviciosData,...admData,...comData,...otrosEgrData,
-          ...egrFinData,...apColData,...apComData];
+          ...egrFinData];
 }
 
 // ─── RENDER TABLAS ───
@@ -2005,6 +2006,15 @@ function capturarEstado() {
     const inp = $(r.id); if(inp) r.val = parseFloat(inp.value)||0;
     vals[r.id] = r.val || 0;
   });
+  // Save apColData and apComData explicitly
+  apColData.forEach(r => {
+    const inp=$(r.id); if(inp) r.val=parseFloat(inp.value)||0;
+    vals[r.id] = r.val;
+  });
+  apComData.forEach(r => {
+    const inp=$(r.id); if(inp) r.val=parseFloat(inp.value)||0;
+    vals[r.id] = r.val;
+  });
   vals._aportesData = aportesData.map(r => ({
     id:r.id, cod:r.cod, label:r.label, ref:r.ref, val:r.val||0,
     type:r.type||null,
@@ -2113,6 +2123,17 @@ function aplicarEstado(estado) {
     }
     const inp=$(r.id); if(inp) inp.value=r.val||0;
     const disp=$(r.id+'-disp'); if(disp) disp.textContent=fmt(r.val||0);
+  });
+  // Restore apColData and apComData
+  apColData.forEach(r => {
+    if(estado[r.id] !== undefined) r.val = estado[r.id];
+    const inp=$(r.id); if(inp) inp.value=r.val||0;
+    const d=$(r.id+'-disp'); if(d) d.textContent=fmt(r.val||0);
+  });
+  apComData.forEach(r => {
+    if(estado[r.id] !== undefined) r.val = estado[r.id];
+    const inp=$(r.id); if(inp) inp.value=r.val||0;
+    const d=$(r.id+'-disp'); if(d) d.textContent=fmt(r.val||0);
   });
   if(estado.locItems) { locItems=estado.locItems; _locSeq=locItems.length+1; }
   if(estado.albItems) { albItems=estado.albItems; _albSeq=albItems.length+1; }
